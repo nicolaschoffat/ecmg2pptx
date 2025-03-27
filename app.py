@@ -1,40 +1,88 @@
-import streamlit as st
-from utils import parse_xml_to_slides, generate_pptx
-from zipfile import ZipFile
-import tempfile
 import os
+import xml.etree.ElementTree as ET
+from pptx import Presentation
+from pptx.util import Inches, Pt
+from pptx.enum.shapes import MSO_SHAPE
+from pptx.enum.shapes import MSO_AUTO_SHAPE_TYPE
+from pptx.dml.color import RGBColor
 
-st.set_page_config(page_title="SCORM ➜ PowerPoint", layout="wide")
-st.title("🧠 Convertisseur SCORM (.zip) ➜ PowerPoint")
+# === CONFIG ===
+CANVAS_WIDTH = 1150
+CANVAS_HEIGHT = 700
+PPT_WIDTH = Inches(13)  # corresponds to 1150px
+PPT_HEIGHT = Inches(7.91)  # corresponds to 700px
+MEDIA_DIR = '.'  # Same folder as script
 
-scorm_zip = st.file_uploader("📦 Dépose ton export SCORM (.zip)", type=["zip"])
+# === Helpers ===
+def percent_to_inches(val, total):
+    return Inches((float(val) / total) * (PPT_WIDTH.inches if total == CANVAS_WIDTH else PPT_HEIGHT.inches))
 
-if scorm_zip:
-    with tempfile.TemporaryDirectory() as tmpdir:
-        with ZipFile(scorm_zip, 'r') as zip_ref:
-            zip_ref.extractall(tmpdir)
+def extract_value(el, attr):
+    return float(el.attrib.get(attr, "0"))
 
-        # Auto-scan récursif : trouver course.xml et son dossier
-        course_xml_path = None
-        for root, dirs, files in os.walk(tmpdir):
-            if "course.xml" in files:
-                course_xml_path = os.path.join(root, "course.xml")
-                media_dir = root  # le dossier contenant course.xml
-                break
+# === Load and Parse XML ===
+tree = ET.parse('course.xml')
+root = tree.getroot()
 
-        if course_xml_path and os.path.exists(course_xml_path):
-            st.success("✅ Fichier 'course.xml' détecté automatiquement")
-            slides = parse_xml_to_slides(course_xml_path, media_dir)
+# Target first <node> and <screen>
+screen = root.find(".//screen")
 
-            output_path = os.path.join(tmpdir, "presentation.pptx")
-            generate_pptx(slides, output_path)
+# === Setup Presentation ===
+prs = Presentation()
+prs.slide_width = PPT_WIDTH
+prs.slide_height = PPT_HEIGHT
+slide = prs.slides.add_slide(prs.slide_layouts[6])  # blank layout
 
-            with open(output_path, "rb") as f:
-                st.download_button(
-                    label="📥 Télécharger le PowerPoint",
-                    data=f,
-                    file_name="presentation_convertie.pptx",
-                    mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
-                )
-        else:
-            st.error("❌ Fichier 'course.xml' introuvable dans le ZIP.")
+# === Process Images ===
+for image in screen.findall("image"):
+    design = image.find("design")
+    content = image.find("content")
+    src = content.attrib["file"].replace("@/", "").strip()
+
+    left = percent_to_inches(design.attrib["left"], CANVAS_WIDTH)
+    top = percent_to_inches(design.attrib["top"], CANVAS_HEIGHT)
+    width = percent_to_inches(design.attrib["width"], CANVAS_WIDTH)
+    height = percent_to_inches(design.attrib["height"], CANVAS_HEIGHT)
+
+    image_path = os.path.join(MEDIA_DIR, src)
+    if os.path.exists(image_path):
+        slide.shapes.add_picture(image_path, left, top, width=width, height=height)
+    else:
+        print(f"⚠️ Image not found: {src}")
+
+# === Process Text ===
+for text in screen.findall("text"):
+    design = text.find("design")
+    content = text.find("content")
+    html = content.text or ""
+    
+    left = percent_to_inches(design.attrib["left"], CANVAS_WIDTH)
+    top = percent_to_inches(design.attrib["top"], CANVAS_HEIGHT)
+    width = percent_to_inches(design.attrib["width"], CANVAS_WIDTH)
+    height = percent_to_inches(design.attrib["height"], CANVAS_HEIGHT)
+
+    textbox = slide.shapes.add_textbox(left, top, width, height)
+    tf = textbox.text_frame
+    tf.clear()
+
+    p = tf.paragraphs[0]
+    p.text = "DÉONTOLOGIE - LE DÉCRET DANS SES GRANDES LIGNES ET L'ARTICLE 2"
+    run = p.runs[0]
+    run.font.size = Pt(24)
+    run.font.bold = True
+    run.font.name = "Tahoma"
+    run.font.color.rgb = RGBColor(0x13, 0xAB, 0xB5)
+
+# === Optional: Process Audio (manual in PPT) ===
+for sound in screen.findall("sound"):
+    content = sound.find("content")
+    audio_src = content.attrib.get("file", "").replace("@/", "").strip()
+    audio_path = os.path.join(MEDIA_DIR, audio_src)
+    if os.path.exists(audio_path):
+        print(f"🔊 Add audio manually in PowerPoint: {audio_src}")
+    else:
+        print(f"⚠️ Audio not found: {audio_src}")
+
+# === Save PPTX ===
+prs.save("slide1.pptx")
+print("✅ slide1.pptx generated successfully.")
