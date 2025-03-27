@@ -4,8 +4,12 @@ import xml.etree.ElementTree as ET
 import os
 from bs4 import BeautifulSoup
 
-def px_to_inches(px):
-    return float(px) / 96.0  # 1 inch = 96 pixels
+# ⚙️ Conversion px ➜ pouces relative à la taille réelle de la slide
+def relative_px_to_inches(px, axis='x', slide_width_px=1150, slide_height_px=700, slide_inches=(11.98, 7.29)):
+    if axis == 'x':
+        return (float(px) / slide_width_px) * slide_inches[0]
+    else:
+        return (float(px) / slide_height_px) * slide_inches[1]
 
 def extract_title(node):
     meta = node.find("metadata")
@@ -23,14 +27,12 @@ def parse_xml_to_slides(xml_file, media_dir):
     for node in root.findall(".//node"):
         subnodes = node.findall(".//node")
         if subnodes:
-            # SECTION parent (s’il a des sous-NODEs)
             section_title = extract_title(node)
             section = {"section": section_title, "slides": []}
             for sub in subnodes:
                 section["slides"].append(extract_slide_data(sub, media_dir))
             course_structure.append(section)
         else:
-            # Slide simple (pas de hiérarchie)
             slide = extract_slide_data(node, media_dir)
             course_structure.append({"section": None, "slides": [slide]})
     
@@ -42,7 +44,6 @@ def extract_slide_data(node, media_dir):
     if screen is None:
         return slide_data
 
-    # Images
     for img in screen.findall("image"):
         content = img.find("content")
         if content is not None and "file" in content.attrib:
@@ -57,7 +58,6 @@ def extract_slide_data(node, media_dir):
                     "height": float(design.attrib.get("height", 1))
                 })
 
-    # Textes
     for txt in screen.findall("text"):
         content = txt.find("content")
         if content is not None:
@@ -78,14 +78,18 @@ def extract_slide_data(node, media_dir):
 
 def generate_pptx(structure, output_path):
     prs = Presentation()
-    prs.slide_width = Inches(11.98)
-    prs.slide_height = Inches(7.29)
+
+    slide_inches = (11.98, 7.29)
+    slide_width_px, slide_height_px = 1150, 700
+
+    prs.slide_width = Inches(slide_inches[0])
+    prs.slide_height = Inches(slide_inches[1])
     blank_layout = prs.slide_layouts[6]
     section_slide_map = []
 
     for group in structure:
-        # Enregistrer l'index du premier slide de la section (si présente)
         section_start_idx = len(prs.slides)
+
         for slide_data in group['slides']:
             slide = prs.slides.add_slide(blank_layout)
             slide.name = slide_data['title'] or "Slide"
@@ -94,30 +98,27 @@ def generate_pptx(structure, output_path):
                 if os.path.exists(img['file']):
                     slide.shapes.add_picture(
                         img['file'],
-                        Inches(px_to_inches(img['left'])),
-                        Inches(px_to_inches(img['top'])),
-                        width=Inches(px_to_inches(img['width'])),
-                        height=Inches(px_to_inches(img['height']))
+                        left=Inches(relative_px_to_inches(img['left'], 'x', slide_width_px, slide_height_px, slide_inches)),
+                        top=Inches(relative_px_to_inches(img['top'], 'y', slide_width_px, slide_height_px, slide_inches)),
+                        width=Inches(relative_px_to_inches(img['width'], 'x', slide_width_px, slide_height_px, slide_inches)),
+                        height=Inches(relative_px_to_inches(img['height'], 'y', slide_width_px, slide_height_px, slide_inches))
                     )
 
             for txt in slide_data['texts']:
                 textbox = slide.shapes.add_textbox(
-                    Inches(px_to_inches(txt['left'])),
-                    Inches(px_to_inches(txt['top'])),
-                    Inches(px_to_inches(txt['width'])),
-                    Inches(px_to_inches(txt['height']))
+                    Inches(relative_px_to_inches(txt['left'], 'x', slide_width_px, slide_height_px, slide_inches)),
+                    Inches(relative_px_to_inches(txt['top'], 'y', slide_width_px, slide_height_px, slide_inches)),
+                    Inches(relative_px_to_inches(txt['width'], 'x', slide_width_px, slide_height_px, slide_inches)),
+                    Inches(relative_px_to_inches(txt['height'], 'y', slide_width_px, slide_height_px, slide_inches))
                 )
                 tf = textbox.text_frame
                 tf.text = txt['text']
 
-        # Créer la section (si label existant)
         if group['section']:
             section_slide_map.append((section_start_idx, group['section']))
 
-    # Injecter les sections via _prs._element (hack)
-    # ATTENTION : python-pptx ne supporte pas officiellement add_section()
     for idx, name in section_slide_map:
-        prs.slides._sldIdLst.insert(idx, prs.slides._sldIdLst[idx])  # duplicate ID
+        prs.slides._sldIdLst.insert(idx, prs.slides._sldIdLst[idx])
         sec_tag = prs.slides._sldIdLst[idx]
         sec_tag.set("name", name)
 
