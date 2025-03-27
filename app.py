@@ -1,3 +1,4 @@
+
 import streamlit as st
 import zipfile
 import tempfile
@@ -14,10 +15,8 @@ from html.parser import HTMLParser
 st.set_page_config(page_title="ECMG to PowerPoint Converter")
 st.title("📤 Convertisseur ECMG vers PowerPoint")
 
-# Upload du fichier zip
 uploaded_file = st.file_uploader("Upload un module ECMG (zip SCORM)", type="zip")
 
-# HTML Parser PowerPoint simplifié
 class HTMLtoPPTX(HTMLParser):
     def __init__(self, text_frame):
         super().__init__()
@@ -27,18 +26,14 @@ class HTMLtoPPTX(HTMLParser):
         self.style = {"bold": False, "italic": False}
 
     def handle_starttag(self, tag, attrs):
-        if tag == "b":
-            self.style["bold"] = True
-        if tag == "i":
-            self.style["italic"] = True
+        if tag == "b": self.style["bold"] = True
+        if tag == "i": self.style["italic"] = True
         self.run = self.p.add_run()
         self.apply_style()
 
     def handle_endtag(self, tag):
-        if tag == "b":
-            self.style["bold"] = False
-        if tag == "i":
-            self.style["italic"] = False
+        if tag == "b": self.style["bold"] = False
+        if tag == "i": self.style["italic"] = False
         self.run = self.p.add_run()
         self.apply_style()
 
@@ -49,12 +44,9 @@ class HTMLtoPPTX(HTMLParser):
         self.run.font.bold = self.style["bold"]
         self.run.font.italic = self.style["italic"]
 
-# Conversion pixels ECMG → inches
-def to_inches(px):
-    try:
-        return float(px) * 0.0264
-    except:
-        return 1.0
+def to_inches(px):  # conversion pixels -> inches
+    try: return float(px) * 0.0264
+    except: return 1.0
 
 if uploaded_file:
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -64,7 +56,6 @@ if uploaded_file:
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall(tmpdir)
 
-        # Rechercher les fichiers XML
         course_path, look_path = None, None
         for root, dirs, files in os.walk(tmpdir):
             if "course.xml" in files:
@@ -73,10 +64,9 @@ if uploaded_file:
                 look_path = os.path.join(root, "look.xml")
 
         if not course_path or not look_path:
-            st.error("Fichiers course.xml ou look.xml introuvables dans le zip")
+            st.error("Fichiers course.xml ou look.xml introuvables.")
             st.stop()
 
-        # Parse les fichiers
         tree = ET.parse(course_path)
         root = tree.getroot()
         nodes = root.findall(".//node")
@@ -87,6 +77,7 @@ if uploaded_file:
             el.attrib["id"]: el.attrib
             for el in look_root.findall(".//screen/*[@id]")
         }
+
         prs = Presentation()
         prs.slide_width = Inches(12)
         prs.slide_height = Inches(7.3)
@@ -94,21 +85,38 @@ if uploaded_file:
         for node in nodes:
             title_el = node.find("./metadata/title")
             title_text = title_el.text.strip() if title_el is not None else "Sans titre"
-
             slide = prs.slides.add_slide(prs.slide_layouts[5])
             slide.shapes.title.text = title_text
-
             page = node.find(".//page")
             screen = page.find("screen") if page is not None else None
             if not screen:
                 continue
-
             y = 1.5
+            content = screen.find("content")
+            if content is not None and ".mp4" in content.attrib.get("file", ""):
+                box = slide.shapes.add_textbox(Inches(2), Inches(3), Inches(8), Inches(1))
+                box.text_frame.text = f"🎥 Vidéo : {content.attrib['file']} à intégrer"
+                continue
+            elfe = screen.find("elfe")
+            if elfe is not None and elfe.find("content") is not None and elfe.find("content").attrib.get("type") == "MCQText":
+                items = elfe.find("content/items")
+                question_el = screen.find("question")
+                if question_el is not None:
+                    question_text = BeautifulSoup(question_el.find("content").text, "html.parser").get_text()
+                    box = slide.shapes.add_textbox(Inches(1), Inches(y), Inches(10), Inches(1))
+                    box.text_frame.text = f"❓ {question_text}"
+                    y += 1.0
+                for item in items.findall("item"):
+                    score = item.attrib.get("score", "0")
+                    label = "✅" if score == "100" else "⬜"
+                    box = slide.shapes.add_textbox(Inches(1.2), Inches(y), Inches(9.5), Inches(0.5))
+                    box.text_frame.text = f"{label} {item.text.strip()}"
+                    y += 0.5
+                continue
             for el in screen.findall("text"):
                 content_el = el.find("content")
                 if content_el is None or not content_el.text:
                     continue
-
                 style = style_map.get(el.attrib.get("id", ""), {})
                 height = to_inches(style.get("height", 10))
                 box = slide.shapes.add_textbox(Inches(1), Inches(y), Inches(10), Inches(height))
@@ -118,13 +126,8 @@ if uploaded_file:
                 parser.feed(content_el.text)
                 y += height + 0.2
 
-        # Export du fichier
         output_path = os.path.join(tmpdir, "converted.pptx")
         prs.save(output_path)
 
         with open(output_path, "rb") as f:
-            st.download_button(
-                label="📄 Télécharger le PowerPoint",
-                data=f,
-                file_name="module_ecmg_converti.pptx"
-            )
+            st.download_button("📥 Télécharger le PowerPoint", data=f, file_name="module_ecmg_converti.pptx")
