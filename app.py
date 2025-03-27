@@ -1,9 +1,7 @@
-
 import streamlit as st
 import zipfile
 import tempfile
 import os
-import shutil
 from bs4 import BeautifulSoup
 from xml.etree import ElementTree as ET
 from pptx import Presentation
@@ -44,7 +42,7 @@ class HTMLtoPPTX(HTMLParser):
         self.run.font.bold = self.style["bold"]
         self.run.font.italic = self.style["italic"]
 
-def to_inches(px):  # conversion pixels -> inches
+def to_inches(px):
     try: return float(px) * 0.0264
     except: return 1.0
 
@@ -112,6 +110,18 @@ if uploaded_file:
                     box = slide.shapes.add_textbox(Inches(1.2), Inches(y), Inches(9.5), Inches(0.5))
                     box.text_frame.text = f"{label} {item.text.strip()}"
                     y += 0.5
+                # Feedbacks ajoutés dans les commentaires
+                feedbacks = page.findall(".//feedbacks/correc/fb/screen/feedback")
+                notes = slide.notes_slide.notes_text_frame
+                feedback_texts = []
+                for fb in feedbacks:
+                    fb_content = fb.find("content")
+                    if fb_content is not None and fb_content.text:
+                        soup = BeautifulSoup(fb_content.text, "html.parser")
+                        feedback_texts.append(soup.get_text(separator="\n"))
+                if feedback_texts:
+                    notes.clear()
+                    notes.text = "\n---\n".join(feedback_texts)
                 continue
             for el in screen.findall("text"):
                 content_el = el.find("content")
