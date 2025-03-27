@@ -1,129 +1,130 @@
 import streamlit as st
-import xml.etree.ElementTree as ET
+import zipfile
+import tempfile
+import os
+import shutil
+from bs4 import BeautifulSoup
+from xml.etree import ElementTree as ET
 from pptx import Presentation
 from pptx.util import Inches, Pt
+from pptx.enum.text import PP_ALIGN
 from pptx.dml.color import RGBColor
-import os
-from io import BytesIO
-import zipfile
+from html.parser import HTMLParser
 
-# Constants
-CANVAS_WIDTH = 1150
-CANVAS_HEIGHT = 700
-PPT_WIDTH = Inches(13)
-PPT_HEIGHT = Inches(7.91)
+st.set_page_config(page_title="ECMG to PowerPoint Converter")
+st.title("📤 Convertisseur ECMG vers PowerPoint")
 
-def percent_of(value, base):
-    return float(value) / 100.0 * base
+# Upload du fichier zip
+uploaded_file = st.file_uploader("Upload un module ECMG (zip SCORM)", type="zip")
 
-def scale_to_ppt(px, total_px, ppt_total):
-    return Inches((px / total_px) * ppt_total.inches)
+# HTML Parser PowerPoint simplifié
+class HTMLtoPPTX(HTMLParser):
+    def __init__(self, text_frame):
+        super().__init__()
+        self.tf = text_frame
+        self.p = text_frame.paragraphs[0]
+        self.run = self.p.add_run()
+        self.style = {"bold": False, "italic": False}
 
-def load_template_dimensions(look_root, screen_type='author_page_intro'):
-    screen_node = look_root.find(f".//screen[@id='{screen_type}']")
-    if screen_node is not None:
-        width = float(screen_node.attrib['width'])
-        height = float(screen_node.attrib['height'])
-        return width, height
-    return 770, 458  # fallback default
+    def handle_starttag(self, tag, attrs):
+        if tag == "b":
+            self.style["bold"] = True
+        if tag == "i":
+            self.style["italic"] = True
+        self.run = self.p.add_run()
+        self.apply_style()
 
-# UI
-st.set_page_config(page_title="ECMG ➜ PPT Slide 1 Converter", layout="centered")
-st.title("🎓 ECMG ➜ PowerPoint Slide Converter")
+    def handle_endtag(self, tag):
+        if tag == "b":
+            self.style["bold"] = False
+        if tag == "i":
+            self.style["italic"] = False
+        self.run = self.p.add_run()
+        self.apply_style()
 
-uploaded_zip = st.file_uploader("📦 Upload ZIP (course.xml + look.xml + media)", type="zip")
+    def handle_data(self, data):
+        self.run.text += data
 
-if uploaded_zip:
-    with zipfile.ZipFile(uploaded_zip) as zip_ref:
-        zip_ref.extractall("temp_ecmg")
-        st.success("✅ Archive extracted")
+    def apply_style(self):
+        self.run.font.bold = self.style["bold"]
+        self.run.font.italic = self.style["italic"]
 
-        # File checks
-        course_path = os.path.join("temp_ecmg", "course.xml")
-        look_path = os.path.join("temp_ecmg", "look.xml")
+# Conversion pixels ECMG → inches
+def to_inches(px):
+    try:
+        return float(px) * 0.0264
+    except:
+        return 1.0
 
-        if not os.path.exists(course_path) or not os.path.exists(look_path):
-            st.error("❌ Missing course.xml or look.xml in archive.")
-        else:
-            # Load look.xml
-            look_tree = ET.parse(look_path)
-            look_root = look_tree.getroot()
+if uploaded_file:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        zip_path = os.path.join(tmpdir, "module.zip")
+        with open(zip_path, "wb") as f:
+            f.write(uploaded_file.read())
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(tmpdir)
 
-            # Load course.xml
-            course_tree = ET.parse(course_path)
-            course_root = course_tree.getroot()
-            screen = course_root.find(".//screen")
-            screen_id = screen.attrib.get('id', 'author_page_intro')
+        # Rechercher les fichiers XML
+        course_path, look_path = None, None
+        for root, dirs, files in os.walk(tmpdir):
+            if "course.xml" in files:
+                course_path = os.path.join(root, "course.xml")
+            if "look.xml" in files:
+                look_path = os.path.join(root, "look.xml")
 
-            template_width, template_height = load_template_dimensions(look_root, screen_id)
+        if not course_path or not look_path:
+            st.error("Fichiers course.xml ou look.xml introuvables dans le zip")
+            st.stop()
 
-            # Prepare PPT
-            prs = Presentation()
-            prs.slide_width = PPT_WIDTH
-            prs.slide_height = PPT_HEIGHT
-            slide = prs.slides.add_slide(prs.slide_layouts[6])
+        # Parse les fichiers
+        tree = ET.parse(course_path)
+        root = tree.getroot()
+        nodes = root.findall(".//node")
 
-            # Add images
-            for image in screen.findall("image"):
-                design = image.find("design")
-                content = image.find("content")
-                src = content.attrib["file"].replace("@/", "").strip()
-                img_path = os.path.join("temp_ecmg", src)
+        look_tree = ET.parse(look_path)
+        look_root = look_tree.getroot()
+        style_map = {
+            el.attrib["id"]: el.attrib
+            for el in look_root.findall(".//screen/*[@id]")
+        }
+        prs = Presentation()
+        prs.slide_width = Inches(12)
+        prs.slide_height = Inches(7.3)
 
-                try:
-                    left_px = percent_of(design.attrib["left"], template_width)
-                    top_px = percent_of(design.attrib["top"], template_height)
-                    width_px = percent_of(design.attrib["width"], template_width)
-                    height_px = percent_of(design.attrib["height"], template_height)
+        for node in nodes:
+            title_el = node.find("./metadata/title")
+            title_text = title_el.text.strip() if title_el is not None else "Sans titre"
 
-                    if os.path.exists(img_path):
-                        slide.shapes.add_picture(
-                            img_path,
-                            scale_to_ppt(left_px, template_width, PPT_WIDTH),
-                            scale_to_ppt(top_px, template_height, PPT_HEIGHT),
-                            width=scale_to_ppt(width_px, template_width, PPT_WIDTH),
-                            height=scale_to_ppt(height_px, template_height, PPT_HEIGHT)
-                        )
-                    else:
-                        st.warning(f"⚠️ Image not found: {src}")
-                except Exception as e:
-                    st.error(f"❌ Error with image: {src}\n{str(e)}")
+            slide = prs.slides.add_slide(prs.slide_layouts[5])
+            slide.shapes.title.text = title_text
 
-            # Add text
-            for text in screen.findall("text"):
-                design = text.find("design")
-                content = text.find("content")
+            page = node.find(".//page")
+            screen = page.find("screen") if page is not None else None
+            if not screen:
+                continue
 
-                left_px = percent_of(design.attrib["left"], template_width)
-                top_px = percent_of(design.attrib["top"], template_height)
-                width_px = percent_of(design.attrib["width"], template_width)
-                height_px = percent_of(design.attrib["height"], template_height)
+            y = 1.5
+            for el in screen.findall("text"):
+                content_el = el.find("content")
+                if content_el is None or not content_el.text:
+                    continue
 
-                textbox = slide.shapes.add_textbox(
-                    scale_to_ppt(left_px, template_width, PPT_WIDTH),
-                    scale_to_ppt(top_px, template_height, PPT_HEIGHT),
-                    scale_to_ppt(width_px, template_width, PPT_WIDTH),
-                    scale_to_ppt(height_px, template_height, PPT_HEIGHT)
-                )
-                tf = textbox.text_frame
+                style = style_map.get(el.attrib.get("id", ""), {})
+                height = to_inches(style.get("height", 10))
+                box = slide.shapes.add_textbox(Inches(1), Inches(y), Inches(10), Inches(height))
+                tf = box.text_frame
                 tf.clear()
+                parser = HTMLtoPPTX(tf)
+                parser.feed(content_el.text)
+                y += height + 0.2
 
-                p = tf.paragraphs[0]
-                p.text = "DÉONTOLOGIE - LE DÉCRET DANS SES GRANDES LIGNES ET L'ARTICLE 2"
-                run = p.runs[0]
-                run.font.size = Pt(24)
-                run.font.bold = True
-                run.font.name = "Tahoma"
-                run.font.color.rgb = RGBColor(0x13, 0xAB, 0xB5)
+        # Export du fichier
+        output_path = os.path.join(tmpdir, "converted.pptx")
+        prs.save(output_path)
 
-            # Save output
-            output = BytesIO()
-            prs.save(output)
-            st.success("🎉 slide1.pptx generated!")
-
+        with open(output_path, "rb") as f:
             st.download_button(
-                label="📥 Download PowerPoint",
-                data=output.getvalue(),
-                file_name="slide1.pptx",
-                mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                label="📄 Télécharger le PowerPoint",
+                data=f,
+                file_name="module_ecmg_converti.pptx"
             )
