@@ -90,11 +90,20 @@ if uploaded_file:
             if not screen:
                 continue
             y = 1.5
-            content = screen.find("content")
-            if content is not None and ".mp4" in content.attrib.get("file", ""):
-                box = slide.shapes.add_textbox(Inches(2), Inches(3), Inches(8), Inches(1))
-                box.text_frame.text = f"🎥 Vidéo : {content.attrib['file']} à intégrer"
+
+            # Recherche vidéo dans tout descendant <content>
+            video_file = None
+            for content_el in screen.findall(".//content"):
+                if "file" in content_el.attrib and content_el.attrib["file"].endswith(".mp4"):
+                    video_file = content_el.attrib["file"]
+                    break
+            if video_file:
+                box = slide.shapes.add_textbox(Inches(3), Inches(3), Inches(6), Inches(1))
+                tf = box.text_frame
+                tf.text = f"🎥 Vidéo : {video_file} à intégrer"
+                tf.paragraphs[0].alignment = PP_ALIGN.CENTER
                 continue
+
             elfe = screen.find("elfe")
             if elfe is not None and elfe.find("content") is not None and elfe.find("content").attrib.get("type") == "MCQText":
                 items = elfe.find("content/items")
@@ -123,6 +132,7 @@ if uploaded_file:
                     notes.clear()
                     notes.text = "\n---\n".join(feedback_texts)
                 continue
+
             for el in screen.findall("text"):
                 content_el = el.find("content")
                 if content_el is None or not content_el.text:
