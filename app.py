@@ -133,17 +133,26 @@ if uploaded_file:
                     notes.text = "\n---\n".join(feedback_texts)
                 continue
 
+            # Récupérer tous les blocs texte avec leur top
+            text_blocks = []
             for el in screen.findall("text"):
                 content_el = el.find("content")
                 if content_el is None or not content_el.text:
                     continue
                 style = style_map.get(el.attrib.get("id", ""), {})
+                top = float(style.get("top", 1000))  # valeur haute par défaut si non défini
+                text_blocks.append((top, el, content_el.text, style))
+
+            # Trier par top croissant
+            text_blocks.sort(key=lambda x: x[0])
+
+            for _, el, text, style in text_blocks:
                 height = to_inches(style.get("height", 10))
                 box = slide.shapes.add_textbox(Inches(1), Inches(y), Inches(10), Inches(height))
                 tf = box.text_frame
                 tf.clear()
                 parser = HTMLtoPPTX(tf)
-                parser.feed(content_el.text)
+                parser.feed(text)
                 y += height + 0.2
 
         output_path = os.path.join(tmpdir, "converted.pptx")
