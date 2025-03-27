@@ -4,34 +4,37 @@ from zipfile import ZipFile
 import tempfile
 import os
 
-st.set_page_config(page_title="Convertisseur XML ➜ PowerPoint", layout="wide")
-st.title("🧠 Convertisseur XML + Médias ➜ PowerPoint")
+st.set_page_config(page_title="SCORM ➜ PowerPoint", layout="wide")
+st.title("🧠 Convertisseur SCORM (.zip) ➜ PowerPoint")
 
-# Upload zone
-xml_file = st.file_uploader("📂 Dépose ton fichier XML", type=["xml"])
-media_zip = st.file_uploader("📦 Fichiers médias (ZIP contenant images, vidéos...)", type=["zip"])
+scorm_zip = st.file_uploader("📦 Dépose ton export SCORM (.zip)", type=["zip"])
 
-if xml_file and media_zip:
+if scorm_zip:
     with tempfile.TemporaryDirectory() as tmpdir:
-        # Dézipper les fichiers
-        media_dir = os.path.join(tmpdir, "media")
-        os.makedirs(media_dir, exist_ok=True)
+        with ZipFile(scorm_zip, 'r') as zip_ref:
+            zip_ref.extractall(tmpdir)
 
-        with ZipFile(media_zip, 'r') as zip_ref:
-            zip_ref.extractall(media_dir)
+        # Auto-scan récursif : trouver course.xml et son dossier
+        course_xml_path = None
+        for root, dirs, files in os.walk(tmpdir):
+            if "course.xml" in files:
+                course_xml_path = os.path.join(root, "course.xml")
+                media_dir = root  # le dossier contenant course.xml
+                break
 
-        # Lire et parser le XML
-        st.success("✅ XML et fichiers médias reçus, traitement en cours...")
-        slides = parse_xml_to_slides(xml_file, media_dir)
+        if course_xml_path and os.path.exists(course_xml_path):
+            st.success("✅ Fichier 'course.xml' détecté automatiquement")
+            slides = parse_xml_to_slides(course_xml_path, media_dir)
 
-        # Génération PowerPoint
-        output_path = os.path.join(tmpdir, "presentation.pptx")
-        generate_pptx(slides, output_path)
+            output_path = os.path.join(tmpdir, "presentation.pptx")
+            generate_pptx(slides, output_path)
 
-        with open(output_path, "rb") as f:
-            st.download_button(
-                label="📥 Télécharger le PowerPoint",
-                data=f,
-                file_name="converti.pptx",
-                mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
-            )
+            with open(output_path, "rb") as f:
+                st.download_button(
+                    label="📥 Télécharger le PowerPoint",
+                    data=f,
+                    file_name="presentation_convertie.pptx",
+                    mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                )
+        else:
+            st.error("❌ Fichier 'course.xml' introuvable dans le ZIP.")
