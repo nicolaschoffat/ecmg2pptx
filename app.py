@@ -181,6 +181,7 @@ if uploaded_file:
                     continue
                 text_id = el.attrib.get("id") or el.attrib.get("author_id")
                 style = style_map.get(text_id, {})
+                st.text(f"text_id = {text_id} → style = {style}")
                 design_el = el.find("design")
                 top = to_inches((design_el.attrib.get("top") if design_el is not None else style.get("top", 1)))
                 left = to_inches((design_el.attrib.get("left") if design_el is not None else style.get("left", 1)))
