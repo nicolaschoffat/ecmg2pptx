@@ -196,6 +196,7 @@ if uploaded_file:
                 width = to_inches((design_el.attrib.get("width") if design_el is not None else style.get("width", 140)))
                 height = to_inches((design_el.attrib.get("height") if design_el is not None else style.get("height", 10)))
 
+                st.text(f"Ajout box at → top={top}, left={left}, width={width}, height={height}")
                 box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
                 tf = box.text_frame
                 tf.clear()
