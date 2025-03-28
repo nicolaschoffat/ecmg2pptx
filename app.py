@@ -91,7 +91,6 @@ if uploaded_file:
                 continue
             y = 1.5
 
-            # Recherche vidéo dans tout descendant <content>
             video_file = None
             for content_el in screen.findall(".//content"):
                 if "file" in content_el.attrib and content_el.attrib["file"].endswith(".mp4"):
@@ -119,7 +118,6 @@ if uploaded_file:
                     box = slide.shapes.add_textbox(Inches(1.2), Inches(y), Inches(9.5), Inches(0.5))
                     box.text_frame.text = f"{label} {item.text.strip()}"
                     y += 0.5
-                # Feedbacks ajoutés dans les commentaires
                 feedbacks = page.findall(".//feedbacks/correc/fb/screen/feedback")
                 notes = slide.notes_slide.notes_text_frame
                 feedback_texts = []
@@ -133,17 +131,20 @@ if uploaded_file:
                     notes.text = "\n---\n".join(feedback_texts)
                 continue
 
-            # Récupérer tous les blocs texte avec leur top
             text_blocks = []
             for el in screen.findall("text"):
                 content_el = el.find("content")
                 if content_el is None or not content_el.text:
                     continue
                 style = style_map.get(el.attrib.get("id", ""), {})
-                top = float(style.get("top", 1000))  # valeur haute par défaut si non défini
+                top = 1000.0
+                design_el = el.find("design")
+                if design_el is not None and "top" in design_el.attrib:
+                    top = float(design_el.attrib["top"])
+                elif "top" in style:
+                    top = float(style["top"])
                 text_blocks.append((top, el, content_el.text, style))
 
-            # Trier par top croissant
             text_blocks.sort(key=lambda x: x[0])
 
             for _, el, text, style in text_blocks:
