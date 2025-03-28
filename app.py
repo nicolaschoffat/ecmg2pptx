@@ -43,8 +43,10 @@ class HTMLtoPPTX(HTMLParser):
         self.run.font.italic = self.style["italic"]
 
 def to_inches(px):
-    try: return float(px) * 0.0264
-    except: return 1.0
+    try:
+        return float(px) * 0.0264
+    except:
+        return 1.0
 
 if uploaded_file:
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -101,6 +103,23 @@ if uploaded_file:
                 tf = box.text_frame
                 tf.text = f"🎥 Vidéo : {video_file} à intégrer"
                 tf.paragraphs[0].alignment = PP_ALIGN.CENTER
+                continue
+
+            content = screen.find("content")
+            if content is not None and content.attrib.get("type") == "Cards":
+                cards = content.find("cards")
+                if cards is not None:
+                    notes = slide.notes_slide.notes_text_frame
+                    feedback_texts = []
+                    for card in cards.findall("card"):
+                        head = card.find("head").text.strip()
+                        face_html = card.find("face").text
+                        back_html = card.find("back").text
+                        face = BeautifulSoup(face_html or "", "html.parser").get_text(separator=" ")
+                        back = BeautifulSoup(back_html or "", "html.parser").get_text(separator=" ")
+                        feedback_texts.append(f"Carte : {head}\nFace : {face}\nBack : {back}")
+                    notes.clear()
+                    notes.text = "\n---\n".join(feedback_texts)
                 continue
 
             elfe = screen.find("elfe")
