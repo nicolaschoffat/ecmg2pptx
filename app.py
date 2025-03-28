@@ -183,20 +183,20 @@ if uploaded_file:
                 style = style_map.get(text_id, {})
                 st.text(f"text_id = {text_id} → style = {style}")
                 design_el = el.find("design")
-                if design_el is not None:
-                    top = float(design_el.attrib.get("top", 0)) / 120 * 7.3
+                if design_el is not None and "top" in design_el.attrib:
+                    top = float(design_el.attrib["top"]) / 120 * 7.3
                 else:
                     top = to_inches(style.get("top", 1))
-                if design_el is not None:
-                    left = float(design_el.attrib.get("left", 0)) / 160 * 12
+                if design_el is not None and "left" in design_el.attrib:
+                    left = float(design_el.attrib["left"]) / 160 * 12
                 else:
                     left = to_inches(style.get("left", 1))
-                if design_el is not None:
-                    width = float(design_el.attrib.get("width", 0)) / 160 * 12
+                if design_el is not None and "width" in design_el.attrib:
+                    width = float(design_el.attrib["width"]) / 160 * 12
                 else:
                     width = to_inches(style.get("width", 140))
-                if design_el is not None:
-                    height = float(design_el.attrib.get("height", 0)) / 120 * 7.3
+                if design_el is not None and "height" in design_el.attrib:
+                    height = float(design_el.attrib["height"]) / 120 * 7.3
                 else:
                     height = to_inches(style.get("height", 10))
                 st.text(f"Ajout box at → top={top}, left={left}, width={width}, height={height}")
