@@ -183,10 +183,22 @@ if uploaded_file:
                 style = style_map.get(text_id, {})
                 st.text(f"text_id = {text_id} → style = {style}")
                 design_el = el.find("design")
-                top = to_inches((design_el.attrib.get("top") if design_el is not None else style.get("top", 1)))
-                left = to_inches((design_el.attrib.get("left") if design_el is not None else style.get("left", 1)))
-                width = to_inches((design_el.attrib.get("width") if design_el is not None else style.get("width", 140)))
-                height = to_inches((design_el.attrib.get("height") if design_el is not None else style.get("height", 10)))
+                if design_el is not None:
+                    top = float(design_el.attrib.get("top", 0)) / 120 * 7.3
+                else:
+                    top = to_inches(style.get("top", 1))
+                if design_el is not None:
+                    left = float(design_el.attrib.get("left", 0)) / 160 * 12
+                else:
+                    left = to_inches(style.get("left", 1))
+                if design_el is not None:
+                    width = float(design_el.attrib.get("width", 0)) / 160 * 12
+                else:
+                    width = to_inches(style.get("width", 140))
+                if design_el is not None:
+                    height = float(design_el.attrib.get("height", 0)) / 120 * 7.3
+                else:
+                    height = to_inches(style.get("height", 10))
                 st.text(f"Ajout box at → top={top}, left={left}, width={width}, height={height}")
                 box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
                 tf = box.text_frame
