@@ -42,8 +42,12 @@ class HTMLtoPPTX(HTMLParser):
         self.run.font.bold = self.style["bold"]
         self.run.font.italic = self.style["italic"]
 
-def from_course(val):
-    px = float(val) / 149.351 * 1150
+def from_course(val, axis):
+    if axis == "y":
+        corrected = float(val) + 10.917  # shift from -10.917 to 0
+        px = corrected / 152.838 * 700
+    else:
+        px = float(val) / 149.351 * 1150
     return px * 0.01043
 
 def from_look(val):
@@ -193,19 +197,19 @@ if uploaded_file:
                 st.text(f"text_id = {text_id} → style = {style}")
                 design_el = el.find("design")
                 if design_el is not None:
-                    top = from_course(design_el.attrib.get("top", 0))
+                    top = from_course(design_el.attrib.get("top", 0), "y")
                 else:
                     top = from_look(style.get("top", 0))
                 if design_el is not None:
-                    left = from_course(design_el.attrib.get("left", 0))
+                    left = from_course(design_el.attrib.get("left", 0), "x")
                 else:
                     left = from_look(style.get("left", 0))
                 if design_el is not None:
-                    width = from_course(design_el.attrib.get("width", 140))
+                    width = from_course(design_el.attrib.get("width", 140), "x")
                 else:
                     width = from_look(style.get("width", 140))
                 if design_el is not None:
-                    height = from_course(design_el.attrib.get("height", 10))
+                    height = from_course(design_el.attrib.get("height", 10), "y")
                 else:
                     height = from_look(style.get("height", 10))
                 st.text(f"Ajout box at → top={top}, left={left}, width={width}, height={height}")
