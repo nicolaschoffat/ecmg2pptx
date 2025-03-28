@@ -131,7 +131,6 @@ if uploaded_file:
                     notes.text = "\n---\n".join(feedback_texts)
                 continue
 
-            # Ajout sons dans commentaires
             sound_blocks = screen.findall(".//sound")
             if sound_blocks:
                 notes = slide.notes_slide.notes_text_frame
@@ -140,7 +139,8 @@ if uploaded_file:
                     author_id = snd.attrib.get("author_id")
                     content = snd.find("content")
                     filename = content.attrib.get("file") if content is not None else None
-                    audio_text = author_map.get(author_id)
+                    key = author_id.lstrip("#") if author_id else None
+                    audio_text = author_map.get(key)
                     if filename:
                         audio_notes.append(f"Audio : {filename}\nTexte lu : {audio_text or '[non trouvé]'}")
                 if audio_notes:
