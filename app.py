@@ -187,10 +187,10 @@ if uploaded_file:
             for _, el, text, style in text_blocks:
                 st.text(f"Bloc: {el.attrib.get('id')} → top={style.get('top')}, left={style.get('left')}, width={style.get('width')}, height={style.get('height')}")
                 design_el = el.find("design")
-                top = to_inches(design_el.attrib.get("top", style.get("top", 1)))
-                left = to_inches(design_el.attrib.get("left", style.get("left", 1)))
-                width = to_inches(design_el.attrib.get("width", style.get("width", 140)))
-                height = to_inches(design_el.attrib.get("height", style.get("height", 10)))
+                top = to_inches((design_el.attrib.get("top") if design_el is not None else style.get("top", 1)))
+                left = to_inches((design_el.attrib.get("left") if design_el is not None else style.get("left", 1)))
+                width = to_inches((design_el.attrib.get("width") if design_el is not None else style.get("width", 140)))
+                height = to_inches((design_el.attrib.get("height") if design_el is not None else style.get("height", 10)))
 
                 box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
                 tf = box.text_frame
