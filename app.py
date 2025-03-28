@@ -105,19 +105,20 @@ if uploaded_file:
                 tf.paragraphs[0].alignment = PP_ALIGN.CENTER
                 continue
 
-            content = screen.find("content")
-            if content is not None and content.attrib.get("type") == "Cards":
-                cards = content.find("cards")
-                if cards is not None:
-                    notes = slide.notes_slide.notes_text_frame
-                    feedback_texts = []
+            # Gestion des cartes (page_cards)
+            cards_blocks = screen.findall(".//cards")
+            if cards_blocks:
+                notes = slide.notes_slide.notes_text_frame
+                feedback_texts = []
+                for cards in cards_blocks:
                     for card in cards.findall("card"):
-                        head = card.find("head").text.strip()
-                        face_html = card.find("face").text
-                        back_html = card.find("back").text
-                        face = BeautifulSoup(face_html or "", "html.parser").get_text(separator=" ")
-                        back = BeautifulSoup(back_html or "", "html.parser").get_text(separator=" ")
+                        head = card.find("head").text.strip() if card.find("head") is not None else ""
+                        face_html = card.find("face").text if card.find("face") is not None else ""
+                        back_html = card.find("back").text if card.find("back") is not None else ""
+                        face = BeautifulSoup(face_html or "", "html.parser").get_text(separator=" ").strip()
+                        back = BeautifulSoup(back_html or "", "html.parser").get_text(separator=" ").strip()
                         feedback_texts.append(f"Carte : {head}\nFace : {face}\nBack : {back}")
+                if feedback_texts:
                     notes.clear()
                     notes.text = "\n---\n".join(feedback_texts)
                 continue
