@@ -42,6 +42,12 @@ class HTMLtoPPTX(HTMLParser):
         self.run.font.bold = self.style["bold"]
         self.run.font.italic = self.style["italic"]
 
+def from_course(val, axis):
+    return float(val) / (160 if axis == "x" else 120) * (12 if axis == "x" else 7.3)
+
+def from_look(val):
+    return float(val) * 0.0104
+
 def to_inches(px):
     try:
         return float(str(px).strip()) * 0.0104
@@ -184,21 +190,21 @@ if uploaded_file:
                 st.text(f"text_id = {text_id} → style = {style}")
                 design_el = el.find("design")
                 if design_el is not None:
-                    top = to_inches(design_el.attrib.get("top", 1))
+                    top = from_course(design_el.attrib.get("top", 0), "y")
                 else:
-                    top = to_inches(style.get("top", 1))
+                    top = from_look(style.get("top", 0))
                 if design_el is not None:
-                    left = to_inches(design_el.attrib.get("left", 1))
+                    left = from_course(design_el.attrib.get("left", 0), "x")
                 else:
-                    left = to_inches(style.get("left", 1))
+                    left = from_look(style.get("left", 0))
                 if design_el is not None:
-                    width = to_inches(design_el.attrib.get("width", 140))
+                    width = from_course(design_el.attrib.get("width", 140), "x")
                 else:
-                    width = to_inches(style.get("width", 140))
+                    width = from_look(style.get("width", 140))
                 if design_el is not None:
-                    height = to_inches(design_el.attrib.get("height", 10))
+                    height = from_course(design_el.attrib.get("height", 10), "y")
                 else:
-                    height = to_inches(style.get("height", 10))
+                    height = from_look(style.get("height", 10))
                 st.text(f"Ajout box at → top={top}, left={left}, width={width}, height={height}")
                 box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
                 tf = box.text_frame
