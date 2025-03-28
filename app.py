@@ -45,8 +45,8 @@ class HTMLtoPPTX(HTMLParser):
 def from_course(val, axis):
     return float(val) / (1150 if axis == "x" else 700) * (12 if axis == "x" else 7.3)
 
-def from_look(val):
-    return float(val) * 0.01043
+def from_look(val, axis):
+    return float(val) / (770 if axis == "x" else 458) * (12 if axis == "x" else 7.3)
 
 
 def to_inches(px):
@@ -193,19 +193,19 @@ if uploaded_file:
                 if design_el is not None:
                     top = from_course(design_el.attrib.get("top", 0), "y")
                 else:
-                    top = from_look(style.get("top", 0))
+                    top = from_look(style.get("top", 0), "y")
                 if design_el is not None:
                     left = from_course(design_el.attrib.get("left", 0), "x")
                 else:
-                    left = from_look(style.get("left", 0))
+                    left = from_look(style.get("left", 0), "x")
                 if design_el is not None:
                     width = from_course(design_el.attrib.get("width", 140), "x")
                 else:
-                    width = from_look(style.get("width", 140))
+                    width = from_look(style.get("width", 140), "x")
                 if design_el is not None:
                     height = from_course(design_el.attrib.get("height", 10), "y")
                 else:
-                    height = from_look(style.get("height", 10))
+                    height = from_look(style.get("height", 10), "y")
                 st.text(f"Ajout box at → top={top}, left={left}, width={width}, height={height}")
                 box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
                 tf = box.text_frame
