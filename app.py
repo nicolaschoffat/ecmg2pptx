@@ -56,15 +56,17 @@ if uploaded_file:
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall(tmpdir)
 
-        course_path, look_path = None, None
+        course_path, look_path, author_path = None, None, None
         for root, dirs, files in os.walk(tmpdir):
             if "course.xml" in files:
                 course_path = os.path.join(root, "course.xml")
             if "look.xml" in files:
                 look_path = os.path.join(root, "look.xml")
+            if "author.xml" in files:
+                author_path = os.path.join(root, "author.xml")
 
-        if not course_path or not look_path:
-            st.error("Fichiers course.xml ou look.xml introuvables.")
+        if not course_path or not look_path or not author_path:
+            st.error("Fichiers course.xml, look.xml ou author.xml introuvables.")
             st.stop()
 
         tree = ET.parse(course_path)
@@ -76,6 +78,13 @@ if uploaded_file:
         style_map = {
             el.attrib["id"]: el.attrib
             for el in look_root.findall(".//screen/*[@id]")
+        }
+
+        author_tree = ET.parse(author_path)
+        author_root = author_tree.getroot()
+        author_map = {
+            el.attrib.get("id"): el.findtext("text")
+            for el in author_root.findall(".//author")
         }
 
         prs = Presentation()
@@ -105,7 +114,6 @@ if uploaded_file:
                 tf.paragraphs[0].alignment = PP_ALIGN.CENTER
                 continue
 
-            # Gestion des cartes (page_cards)
             cards_blocks = screen.findall(".//cards")
             if cards_blocks:
                 notes = slide.notes_slide.notes_text_frame
@@ -122,6 +130,21 @@ if uploaded_file:
                     notes.clear()
                     notes.text = "\n---\n".join(feedback_texts)
                 continue
+
+            # Ajout sons dans commentaires
+            sound_blocks = screen.findall(".//sound")
+            if sound_blocks:
+                notes = slide.notes_slide.notes_text_frame
+                audio_notes = []
+                for snd in sound_blocks:
+                    author_id = snd.attrib.get("author_id")
+                    content = snd.find("content")
+                    filename = content.attrib.get("file") if content is not None else None
+                    audio_text = author_map.get(author_id)
+                    if filename:
+                        audio_notes.append(f"Audio : {filename}\nTexte lu : {audio_text or '[non trouvé]'}")
+                if audio_notes:
+                    notes.text += "\n\n" + "\n---\n".join(audio_notes)
 
             elfe = screen.find("elfe")
             if elfe is not None and elfe.find("content") is not None and elfe.find("content").attrib.get("type") == "MCQText":
@@ -147,8 +170,7 @@ if uploaded_file:
                         soup = BeautifulSoup(fb_content.text, "html.parser")
                         feedback_texts.append(soup.get_text(separator="\n"))
                 if feedback_texts:
-                    notes.clear()
-                    notes.text = "\n---\n".join(feedback_texts)
+                    notes.text += "\n---\n" + "\n---\n".join(feedback_texts)
                 continue
 
             text_blocks = []
