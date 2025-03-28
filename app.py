@@ -184,7 +184,9 @@ if uploaded_file:
 
             text_blocks.sort(key=lambda x: x[0])
 
-            for _, el, text, style in text_blocks:
+            for _, el, text, _ in text_blocks:
+                text_id = el.attrib.get("id") or el.attrib.get("author_id")
+                style = style_map.get(text_id, {})
                 st.text(f"Bloc: {el.attrib.get('id')} → top={style.get('top')}, left={style.get('left')}, width={style.get('width')}, height={style.get('height')}")
                 design_el = el.find("design")
                 top = to_inches((design_el.attrib.get("top") if design_el is not None else style.get("top", 1)))
