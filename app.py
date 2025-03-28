@@ -178,24 +178,24 @@ if uploaded_file:
                 if content_el is None or not content_el.text:
                     continue
                 style = style_map.get(el.attrib.get("id", ""), {})
-                top = 1000.0
                 design_el = el.find("design")
-                if design_el is not None and "top" in design_el.attrib:
-                    top = float(design_el.attrib["top"])
-                elif "top" in style:
-                    top = float(style["top"])
+                top = float(design_el.attrib.get("top", style.get("top", 1000)))
                 text_blocks.append((top, el, content_el.text, style))
 
             text_blocks.sort(key=lambda x: x[0])
 
             for _, el, text, style in text_blocks:
-                height = to_inches(style.get("height", 10))
-                box = slide.shapes.add_textbox(Inches(1), Inches(y), Inches(10), Inches(height))
+                design_el = el.find("design")
+                top = to_inches(design_el.attrib.get("top", style.get("top", 1)))
+                left = to_inches(design_el.attrib.get("left", style.get("left", 1)))
+                width = to_inches(design_el.attrib.get("width", style.get("width", 140)))
+                height = to_inches(design_el.attrib.get("height", style.get("height", 10)))
+
+                box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
                 tf = box.text_frame
                 tf.clear()
                 parser = HTMLtoPPTX(tf)
                 parser.feed(text)
-                y += height + 0.2
 
         output_path = os.path.join(tmpdir, "converted.pptx")
         prs.save(output_path)
