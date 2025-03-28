@@ -42,11 +42,9 @@ class HTMLtoPPTX(HTMLParser):
         self.run.font.bold = self.style["bold"]
         self.run.font.italic = self.style["italic"]
 
-def from_course(val, axis):
-    return float(val) / (1150 if axis == "x" else 700) * (12 if axis == "x" else 7.3)
+def from_ecmg_px(val):
+    return float(val) * 0.01043
 
-def from_look(val, axis):
-    return float(val) / (770 if axis == "x" else 458) * (12 if axis == "x" else 7.3)
 
 
 def to_inches(px):
@@ -191,21 +189,21 @@ if uploaded_file:
                 st.text(f"text_id = {text_id} → style = {style}")
                 design_el = el.find("design")
                 if design_el is not None:
-                    top = from_course(design_el.attrib.get("top", 0), "y")
+                    top = from_ecmg_px(design_el.attrib.get("top", 0))
                 else:
-                    top = from_look(style.get("top", 0), "y")
+                    top = from_ecmg_px(style.get("top", 0))
                 if design_el is not None:
-                    left = from_course(design_el.attrib.get("left", 0), "x")
+                    left = from_ecmg_px(design_el.attrib.get("left", 0))
                 else:
-                    left = from_look(style.get("left", 0), "x")
+                    left = from_ecmg_px(style.get("left", 0))
                 if design_el is not None:
-                    width = from_course(design_el.attrib.get("width", 140), "x")
+                    width = from_ecmg_px(design_el.attrib.get("width", 140))
                 else:
-                    width = from_look(style.get("width", 140), "x")
+                    width = from_ecmg_px(style.get("width", 140))
                 if design_el is not None:
-                    height = from_course(design_el.attrib.get("height", 10), "y")
+                    height = from_ecmg_px(design_el.attrib.get("height", 10))
                 else:
-                    height = from_look(style.get("height", 10), "y")
+                    height = from_ecmg_px(style.get("height", 10))
                 st.text(f"Ajout box at → top={top}, left={left}, width={width}, height={height}")
                 box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
                 tf = box.text_frame
