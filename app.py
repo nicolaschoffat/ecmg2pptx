@@ -77,7 +77,7 @@ if uploaded_file:
         look_root = look_tree.getroot()
         style_map = {
             el.attrib["id"]: el.attrib
-            for el in look_root.findall(".//screen/*[@id]")
+            for el in look_root.findall(".//*[@id]")
         }
 
         author_tree = ET.parse(author_path)
