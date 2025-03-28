@@ -44,7 +44,7 @@ class HTMLtoPPTX(HTMLParser):
 
 def to_inches(px):
     try:
-        return float(px) * 0.0264
+        return float(px) * 0.0104
     except:
         return 1.0
 
