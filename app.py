@@ -173,35 +173,23 @@ if uploaded_file:
                     notes.text += "\n---\n" + "\n---\n".join(feedback_texts)
                 continue
 
-            text_blocks = []
             for el in screen.findall("text"):
                 content_el = el.find("content")
                 if content_el is None or not content_el.text:
                     continue
-                style = style_map.get(el.attrib.get("id", ""), {})
-                design_el = el.find("design")
-                top = float(design_el.attrib.get("top", style.get("top", 1000)))
-                text_blocks.append((top, el, content_el.text, style))
-
-            text_blocks.sort(key=lambda x: x[0])
-
-            for _, el, text, _ in text_blocks:
                 text_id = el.attrib.get("id") or el.attrib.get("author_id")
                 style = style_map.get(text_id, {})
-                st.text(f"Bloc: {text_id} → style = {style}")
-                st.text(f"Bloc: {el.attrib.get('id')} → top={style.get('top')}, left={style.get('left')}, width={style.get('width')}, height={style.get('height')}")
                 design_el = el.find("design")
                 top = to_inches((design_el.attrib.get("top") if design_el is not None else style.get("top", 1)))
                 left = to_inches((design_el.attrib.get("left") if design_el is not None else style.get("left", 1)))
                 width = to_inches((design_el.attrib.get("width") if design_el is not None else style.get("width", 140)))
                 height = to_inches((design_el.attrib.get("height") if design_el is not None else style.get("height", 10)))
-
                 st.text(f"Ajout box at → top={top}, left={left}, width={width}, height={height}")
                 box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
                 tf = box.text_frame
                 tf.clear()
                 parser = HTMLtoPPTX(tf)
-                parser.feed(text)
+                parser.feed(content_el.text)
 
         output_path = os.path.join(tmpdir, "converted.pptx")
         prs.save(output_path)
