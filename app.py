@@ -83,8 +83,8 @@ if uploaded_file:
         author_tree = ET.parse(author_path)
         author_root = author_tree.getroot()
         author_map = {
-            el.attrib.get("id"): el.findtext("text")
-            for el in author_root.findall(".//author")
+            el.attrib.get("id"): el.findtext("description")
+            for el in author_root.findall(".//item")
         }
 
         prs = Presentation()
@@ -139,8 +139,7 @@ if uploaded_file:
                     author_id = snd.attrib.get("author_id")
                     content = snd.find("content")
                     filename = content.attrib.get("file") if content is not None else None
-                    key = author_id.lstrip("#") if author_id else None
-                    audio_text = author_map.get(key)
+                    audio_text = author_map.get(author_id)
                     if filename:
                         audio_notes.append(f"Audio : {filename}\nTexte lu : {audio_text or '[non trouvé]'}")
                 if audio_notes:
