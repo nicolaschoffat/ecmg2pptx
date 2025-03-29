@@ -83,10 +83,14 @@ def build_presentation(zip_file):
         look_root = parse_xml(look_path)
         course_root = parse_xml(course_path)
 
+        
         style_map = {}
-        for el in look_root.iter():
-            if "id" in el.attrib:
-                style_map[el.attrib["id"]] = el.attrib
+        for el in look_root.findall(".//text"):
+            text_id = el.attrib.get("id")
+            design_el = el.find("design")
+            if text_id and design_el is not None:
+                style_map[text_id] = design_el.attrib
+
 
         prs = Presentation()
         prs.slide_width = Inches(12)
