@@ -87,10 +87,10 @@ def from_course(val, unit):
     px = float(val)
     if unit == "x":
         logical_x = ((px - (-1.299)) / 149.351) * 1150
-        return logical_x * 0.02651
+        return round(logical_x * 0.02651, 2)
     else:
         logical_y = ((px - (-10.917)) / 152.838) * 700
-        return logical_y * 0.02649
+        return round(logical_y * 0.02649, 2)
 
 def from_look(val):
     return float(val) * 0.01043
