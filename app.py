@@ -71,20 +71,22 @@ def parse_formatted_html(text_frame, html_content, style=None):
     html_content = html_content or ""
     parser = PPTXHTMLParser(text_frame)
     parser.feed(html_content)
-    
+    text_frame.word_wrap = True
+    alignment = style.get("align") if style else "left"
+    for p in text_frame.paragraphs:
+        if alignment == "center":
+            p.alignment = PP_ALIGN.CENTER
         elif alignment == "right":
+            p.alignment = PP_ALIGN.RIGHT
         else:
-    elif alignment == "right":
-        for p in text_frame.paragraphs:
-    else:
-        for p in text_frame.paragraphs:
+            p.alignment = PP_ALIGN.LEFT
+    
 
 
 def from_course(val, axis):
     if axis == "y":
         corrected = float(val) + 10.917
         px = corrected / 152.838 * 700
-    else:
         px = float(val) / 149.351 * 1150
     return px * 0.01043
 
@@ -114,9 +116,6 @@ def add_textbox(slide, text, left, top, width, height, style, design_el=None):
     print(f"ALIGN DEBUG → align =", style.get("align"))
     parse_formatted_html(text_frame, text or "", style)
     # Appliquer l'alignement
-    if alignment == "center":
-    elif alignment == "right":
-    else:
 
 
     font_name = design_el.attrib.get("font") if design_el is not None and "font" in design_el.attrib else style.get("font", "Arial")
@@ -134,8 +133,6 @@ def add_textbox(slide, text, left, top, width, height, style, design_el=None):
     adjusted_size = px_to_pt.get(font_size, font_size)
     font.size = Pt(adjusted_size)
     
-        elif alignment == "right":
-        else:
 
     font.bold = bold
     font.italic = italic
