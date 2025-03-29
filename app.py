@@ -11,7 +11,7 @@ import tempfile
 import re
 
 
-def parse_formatted_html(text_frame, html):
+def parse_formatted_html(text_frame, html_content):
     import html
     from html.parser import HTMLParser
 
@@ -54,8 +54,8 @@ def parse_formatted_html(text_frame, html):
             self.current_run.font.underline = self.current_style["underline"]
 
     parser = PPTXHTMLParser(text_frame)
-    html = html or ""
-    parser.feed(html)
+    html_content = html_content or ""
+    parser.feed(html_content)
     text_frame.word_wrap = True
 
 
