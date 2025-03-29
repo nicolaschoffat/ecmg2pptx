@@ -85,7 +85,12 @@ def parse_formatted_html(text_frame, html_content, style=None):
 
 def from_course(val, unit):
     px = float(val)
-    return px * 0.02651 if unit == "x" else px * 0.02649
+    if unit == "x":
+        logical_x = ((px - (-1.299)) / 149.351) * 1150
+        return logical_x * 0.02651
+    else:
+        logical_y = ((px - (-10.917)) / 152.838) * 700
+        return logical_y * 0.02649
 
 def from_look(val):
     return float(val) * 0.01043
