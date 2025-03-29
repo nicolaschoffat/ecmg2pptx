@@ -54,6 +54,7 @@ def parse_formatted_html(text_frame, html):
             self.current_run.font.underline = self.current_style["underline"]
 
     parser = PPTXHTMLParser(text_frame)
+    html = html or ""
     parser.feed(html)
     text_frame.word_wrap = True
 
