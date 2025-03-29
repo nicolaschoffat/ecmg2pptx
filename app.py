@@ -1,3 +1,4 @@
+
 import zipfile
 import os
 import xml.etree.ElementTree as ET
@@ -21,6 +22,12 @@ def from_look(val):
 def extract_xml_from_zip(zip_path, extract_to):
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         zip_ref.extractall(extract_to)
+
+def find_file(root_dir, filename):
+    for root, _, files in os.walk(root_dir):
+        if filename in files:
+            return os.path.join(root, filename)
+    return None
 
 def parse_xml(file_path):
     tree = ET.parse(file_path)
@@ -60,8 +67,11 @@ def build_presentation(zip_file):
 
         extract_xml_from_zip(zip_path, tmpdir)
 
-        look_path = os.path.join(tmpdir, "look.xml")
-        course_path = os.path.join(tmpdir, "course.xml")
+        look_path = find_file(tmpdir, "look.xml")
+        course_path = find_file(tmpdir, "course.xml")
+
+        if not look_path or not course_path:
+            raise FileNotFoundError("look.xml ou course.xml introuvable dans l’archive.")
 
         look_root = parse_xml(look_path)
         course_root = parse_xml(course_path)
