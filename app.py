@@ -11,18 +11,35 @@ import tempfile
 import re
 
 
-def parse_formatted_html(text_frame, html_content):
+def parse_formatted_html(text_frame, html_content, style=None):
     import html
     from html.parser import HTMLParser
+    from pptx.dml.color import RGBColor
+    from pptx.util import Pt
+    from pptx.enum.text import PP_ALIGN
 
     class PPTXHTMLParser(HTMLParser):
         def __init__(self, text_frame):
             super().__init__()
             self.text_frame = text_frame
             self.p = text_frame.paragraphs[0]
-            self.current_run = self.p.add_run()
             self.current_style = {"bold": False, "italic": False, "underline": False}
             self.new_paragraph = False
+            self.default_font = style.get("font", "Tahoma") if style else "Tahoma"
+            self.default_size = int(style.get("fontsize", "20")) if style else 20
+            self.default_color = style.get("fontcolor", "#000000") if style else "#000000"
+
+        def apply_style(self, run):
+            run.font.bold = self.current_style["bold"]
+            run.font.italic = self.current_style["italic"]
+            run.font.underline = self.current_style["underline"]
+            run.font.name = self.default_font
+            run.font.size = Pt(px_to_pt.get(self.default_size, self.default_size))
+            try:
+                r, g, b = tuple(int(self.default_color.lstrip("#")[i:i+2], 16) for i in (0, 2, 4))
+                run.font.color.rgb = RGBColor(r, g, b)
+            except:
+                pass
 
         def handle_starttag(self, tag, attrs):
             if tag == "b":
@@ -33,10 +50,8 @@ def parse_formatted_html(text_frame, html_content):
                 self.current_style["underline"] = True
             elif tag == "br":
                 self.p = self.text_frame.add_paragraph()
-                self.current_run = self.p.add_run()
             elif tag == "p":
                 self.p = self.text_frame.add_paragraph()
-                self.current_run = self.p.add_run()
 
         def handle_endtag(self, tag):
             if tag == "b":
@@ -47,16 +62,26 @@ def parse_formatted_html(text_frame, html_content):
                 self.current_style["underline"] = False
 
         def handle_data(self, data):
-            self.current_run = self.p.add_run()
-            self.current_run.text = html.unescape(data)
-            self.current_run.font.bold = self.current_style["bold"]
-            self.current_run.font.italic = self.current_style["italic"]
-            self.current_run.font.underline = self.current_style["underline"]
+            run = self.p.add_run()
+            run.text = html.unescape(data)
+            self.apply_style(run)
 
-    parser = PPTXHTMLParser(text_frame)
     html_content = html_content or ""
+    parser = PPTXHTMLParser(text_frame)
     parser.feed(html_content)
     text_frame.word_wrap = True
+
+    # alignement global
+    alignment = style.get("align") if style else "left"
+    if alignment == "center":
+        for p in text_frame.paragraphs:
+            p.alignment = PP_ALIGN.CENTER
+    elif alignment == "right":
+        for p in text_frame.paragraphs:
+            p.alignment = PP_ALIGN.RIGHT
+    else:
+        for p in text_frame.paragraphs:
+            p.alignment = PP_ALIGN.LEFT
 
 
 def from_course(val, axis):
@@ -90,7 +115,7 @@ def add_textbox(slide, text, left, top, width, height, style, design_el=None):
     text_frame.clear()
     p = text_frame.paragraphs[0]
     run = p.add_run()
-    parse_formatted_html(text_frame, text or "")
+    parse_formatted_html(text_frame, text or "", style)
     # Appliquer l'alignement
     alignment = style.get("align") if design_el is None else design_el.attrib.get("align")
     if alignment == "center":
