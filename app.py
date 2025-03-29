@@ -90,7 +90,7 @@ def add_textbox(slide, text, left, top, width, height, style, design_el=None):
     text_frame.clear()
     p = text_frame.paragraphs[0]
     run = p.add_run()
-    parse_formatted_html(text_frame, text)
+    parse_formatted_html(text_frame, text or "")
     # Appliquer l'alignement
     alignment = style.get("align") if design_el is None else design_el.attrib.get("align")
     if alignment == "center":
