@@ -119,7 +119,7 @@ def build_presentation(zip_file):
                 st.text(f"Ajout box at → top={top}, left={left}, width={width}, height={height}")
 add_textbox(slide, text_content, left, top, width, height, style, design_el)
 
-        return prs
+    return prs
 
 st.title("Convertisseur ECMG vers PowerPoint")
 uploaded_file = st.file_uploader("Déposez votre archive SCORM (ZIP)", type="zip")
