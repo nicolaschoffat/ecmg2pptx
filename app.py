@@ -112,10 +112,10 @@ def build_presentation(zip_file):
                 design_el = text_el.find(".//design")
                 style = style_map.get(text_id, {})
 
-                top = from_course(design_el.attrib.get("top", 0), "y") if design_el is not None else from_look(float(style.get("top", "0")))
-                left = from_course(design_el.attrib.get("left", 0), "x") if design_el is not None else from_look(float(style.get("left", "0")))
-                width = from_course(design_el.attrib.get("width", 140), "x") if design_el is not None else from_look(float(style.get("width", "140")))
-                height = from_course(design_el.attrib.get("height", 10), "y") if design_el is not None else from_look(float(style.get("height", "10")))
+                top = from_course(design_el.attrib["top"], "y") if design_el is not None and "top" in design_el.attrib else from_look(float(style.get("top", "0")))
+                left = from_course(design_el.attrib["left"], "x") if design_el is not None and "left" in design_el.attrib else from_look(float(style.get("left", "0")))
+                width = from_course(design_el.attrib["width"], "x") if design_el is not None and "width" in design_el.attrib else from_look(float(style.get("width", "140")))
+                height = from_course(design_el.attrib["height"], "y") if design_el is not None and "height" in design_el.attrib else from_look(float(style.get("height", "10")))
 
                 st.text(f"Ajout box at → top={top}, left={left}, width={width}, height={height}")
                 
