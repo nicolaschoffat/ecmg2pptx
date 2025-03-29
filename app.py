@@ -93,7 +93,6 @@ def build_presentation(zip_file):
                 height = from_course(design_el.attrib.get("height", 10), "y") if design_el is not None else from_look(style.get("height", 10))
 
                 st.text(f"Ajout box at → top={top}, left={left}, width={width}, height={height}")
-
                 add_textbox(slide, text_content, left, top, width, height, style, design_el)
 
         return prs
