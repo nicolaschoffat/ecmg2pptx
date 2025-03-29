@@ -7,6 +7,13 @@ from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 import streamlit as st
 import tempfile
+import re
+
+def clean_html(raw_html):
+    clean_text = re.sub('<br\s*/?>', '\n', raw_html, flags=re.IGNORECASE)
+    clean_text = re.sub('<.*?>', '', clean_text)  # remove all tags
+    return clean_text.strip()
+
 
 def from_course(val, axis):
     if axis == "y":
@@ -95,7 +102,7 @@ def build_presentation(zip_file):
             for text_el in node.findall(".//text"):
                 text_id = text_el.attrib.get("id")
                 text_content_el = text_el.find(".//content")
-                text_content = text_content_el.text if text_content_el is not None else ""
+                text_content = clean_html(text_content_el.text) if text_content_el is not None else ""
                 design_el = text_el.find(".//design")
                 style = style_map.get(text_id, {})
 
