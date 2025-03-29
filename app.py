@@ -72,12 +72,14 @@ def parse_formatted_html(text_frame, html_content, style=None):
     parser = PPTXHTMLParser(text_frame)
     parser.feed(html_content)
     text_frame.word_wrap = True
-
-    # alignement global
     alignment = style.get("align") if style else "left"
-    if alignment == "center":
-        for p in text_frame.paragraphs:
+    for p in text_frame.paragraphs:
+        if alignment == "center":
             p.alignment = PP_ALIGN.CENTER
+        elif alignment == "right":
+            p.alignment = PP_ALIGN.RIGHT
+        else:
+            p.alignment = PP_ALIGN.LEFT
     elif alignment == "right":
         for p in text_frame.paragraphs:
             p.alignment = PP_ALIGN.RIGHT
