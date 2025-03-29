@@ -141,11 +141,7 @@ def add_textbox(slide, text, left, top, width, height, style, design_el=None):
     px_to_pt = {8: 6, 10: 7, 12: 9, 14: 10, 16: 12, 18: 14, 20: 15, 22: 17, 25: 19, 30: 22, 35: 25, 40: 30, 45: 34, 50: 36}
     adjusted_size = px_to_pt.get(font_size, font_size)
     font.size = Pt(adjusted_size)
-    text_frame.word_wrap = True
-    alignment = style.get("align") if style else "left"
-    for p in text_frame.paragraphs:
-        if alignment == "center":
-            p.alignment = PP_ALIGN.CENTER
+    
         elif alignment == "right":
             p.alignment = PP_ALIGN.RIGHT
         else:
