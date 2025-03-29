@@ -117,7 +117,7 @@ def build_presentation(zip_file):
                 
                 st.text(f"text_id = {text_id} → style = {style}")
                 st.text(f"Ajout box at → top={top}, left={left}, width={width}, height={height}")
-add_textbox(slide, text_content, left, top, width, height, style, design_el)
+                add_textbox(slide, text_content, left, top, width, height, style, design_el)
 
     return prs
 
