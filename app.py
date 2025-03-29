@@ -190,10 +190,10 @@ def build_presentation(zip_file):
                 design_el = text_el.find(".//design")
                 style = style_map.get(text_id, {})
 
-                top = from_course(design_el.attrib["top"], "y") if design_el is not None and design_el.attrib.get("top") not in [None, ""] else from_look(float(style.get("top", "0")))
-                left = from_course(design_el.attrib["left"], "x") if design_el is not None and design_el.attrib.get("left") not in [None, ""] else from_look(float(style.get("left", "0")))
-                width = from_course(design_el.attrib["width"], "x") if design_el is not None and design_el.attrib.get("width") not in [None, ""] else from_look(float(style.get("width", "1000")))
-                height = from_course(design_el.attrib["height"], "y") if design_el is not None and design_el.attrib.get("height") not in [None, ""] else from_look(float(style.get("height", "100")))
+                top=Inches(from_course / 2.54)(design_el.attrib["top"], "y") if design_el is not None and design_el.attrib.get("top") not in [None, ""] else from_look(float(style.get("top", "0")))
+                left=Inches(from_course / 2.54)(design_el.attrib["left"], "x") if design_el is not None and design_el.attrib.get("left") not in [None, ""] else from_look(float(style.get("left", "0")))
+                width=Inches(from_course / 2.54)(design_el.attrib["width"], "x") if design_el is not None and design_el.attrib.get("width") not in [None, ""] else from_look(float(style.get("width", "1000")))
+                height=Inches(from_course / 2.54)(design_el.attrib["height"], "y") if design_el is not None and design_el.attrib.get("height") not in [None, ""] else from_look(float(style.get("height", "100")))
 
                 st.text(f"Ajout box at → top={top}, left={left}, width={width}, height={height}")
                 
