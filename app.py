@@ -89,6 +89,8 @@ def build_presentation(zip_file):
                 style_map[el.attrib["id"]] = el.attrib
 
         prs = Presentation()
+        prs.slide_width = Inches(12)
+        prs.slide_height = Inches(7.3)
         blank_slide_layout = prs.slide_layouts[6]
 
         for node in course_root.findall(".//node"):
@@ -112,7 +114,10 @@ def build_presentation(zip_file):
                 height = from_course(design_el.attrib.get("height", 10), "y") if design_el is not None else from_look(style.get("height", 10))
 
                 st.text(f"Ajout box at → top={top}, left={left}, width={width}, height={height}")
-                add_textbox(slide, text_content, left, top, width, height, style, design_el)
+                
+                st.text(f"text_id = {text_id} → style = {style}")
+                st.text(f"Ajout box at → top={top}, left={left}, width={width}, height={height}")
+add_textbox(slide, text_content, left, top, width, height, style, design_el)
 
         return prs
 
