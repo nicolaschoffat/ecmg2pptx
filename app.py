@@ -4,6 +4,7 @@ import os
 import xml.etree.ElementTree as ET
 from pptx import Presentation
 from pptx.util import Inches, Pt
+from pptx.enum.text import PP_ALIGN
 from pptx.dml.color import RGBColor
 import streamlit as st
 import tempfile
@@ -47,6 +48,15 @@ def add_textbox(slide, text, left, top, width, height, style, design_el=None):
     p = text_frame.paragraphs[0]
     run = p.add_run()
     run.text = text
+    # Appliquer l'alignement
+    alignment = style.get("align") if design_el is None else design_el.attrib.get("align")
+    if alignment == "center":
+        p.alignment = PP_ALIGN.CENTER
+    elif alignment == "right":
+        p.alignment = PP_ALIGN.RIGHT
+    else:
+        p.alignment = PP_ALIGN.LEFT
+
 
     font_name = design_el.attrib.get("font") if design_el is not None and "font" in design_el.attrib else style.get("font", "Arial")
     font_size = int(design_el.attrib.get("fontsize")) if design_el is not None and "fontsize" in design_el.attrib else int(style.get("fontsize", 18))
