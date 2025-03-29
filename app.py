@@ -67,7 +67,11 @@ def add_textbox(slide, text, left, top, width, height, style, design_el=None):
 
     font = run.font
     font.name = font_name
-    font.size = Pt(font_size)
+    
+    adjusted_size = max(5, font_size - 10)
+    font.size = Pt(adjusted_size)
+    text_frame.word_wrap = True
+
     font.bold = bold
     font.italic = italic
     font.underline = underline
