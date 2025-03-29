@@ -71,11 +71,7 @@ def parse_formatted_html(text_frame, html_content, style=None):
     html_content = html_content or ""
     parser = PPTXHTMLParser(text_frame)
     parser.feed(html_content)
-    text_frame.word_wrap = True
-    alignment = style.get("align") if style else "left"
-    for p in text_frame.paragraphs:
-        if alignment == "center":
-            p.alignment = PP_ALIGN.CENTER
+    
         elif alignment == "right":
             p.alignment = PP_ALIGN.RIGHT
         else:
@@ -146,6 +142,14 @@ def add_textbox(slide, text, left, top, width, height, style, design_el=None):
     adjusted_size = px_to_pt.get(font_size, font_size)
     font.size = Pt(adjusted_size)
     text_frame.word_wrap = True
+    alignment = style.get("align") if style else "left"
+    for p in text_frame.paragraphs:
+        if alignment == "center":
+            p.alignment = PP_ALIGN.CENTER
+        elif alignment == "right":
+            p.alignment = PP_ALIGN.RIGHT
+        else:
+            p.alignment = PP_ALIGN.LEFT
 
     font.bold = bold
     font.italic = italic
