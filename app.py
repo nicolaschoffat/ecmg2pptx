@@ -68,7 +68,9 @@ def add_textbox(slide, text, left, top, width, height, style, design_el=None):
     font = run.font
     font.name = font_name
     
-    adjusted_size = max(5, font_size - 10)
+    # Table de conversion PX → PT
+    px_to_pt = {8: 6, 10: 7, 12: 9, 14: 10, 16: 12, 18: 14, 20: 15, 22: 17, 25: 19, 30: 22, 35: 25, 40: 30, 45: 34, 50: 36}
+    adjusted_size = px_to_pt.get(font_size, font_size)
     font.size = Pt(adjusted_size)
     text_frame.word_wrap = True
 
