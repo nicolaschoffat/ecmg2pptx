@@ -117,7 +117,7 @@ def add_textbox(slide, text, left, top, width, height, style, design_el=None):
     text_frame.clear()
     p = text_frame.paragraphs[0]
     run = p.add_run()
-    print(f"ALIGN DEBUG for {text_id} → align =", style.get("align"))
+    print(f"ALIGN DEBUG → align =", style.get("align"))
     parse_formatted_html(text_frame, text or "", style)
     # Appliquer l'alignement
     alignment = style.get("align") if design_el is None else design_el.attrib.get("align")
