@@ -18,6 +18,8 @@ def parse_formatted_html(text_frame, html_content, style=None):
     from pptx.util import Pt
     from pptx.enum.text import PP_ALIGN
 
+    px_to_pt = {8: 6, 10: 7, 12: 9, 14: 10, 16: 12, 18: 14, 20: 15, 22: 17, 25: 19, 30: 22, 35: 25, 40: 30, 45: 34, 50: 36}
+
     class PPTXHTMLParser(HTMLParser):
         def __init__(self, text_frame):
             super().__init__()
