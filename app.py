@@ -10,10 +10,52 @@ import streamlit as st
 import tempfile
 import re
 
-def clean_html(raw_html):
-    clean_text = re.sub('<br\s*/?>', '\n', raw_html, flags=re.IGNORECASE)
-    clean_text = re.sub('<.*?>', '', clean_text)  # remove all tags
-    return clean_text.strip()
+
+def parse_formatted_html(text_frame, html):
+    import html
+    from html.parser import HTMLParser
+
+    class PPTXHTMLParser(HTMLParser):
+        def __init__(self, text_frame):
+            super().__init__()
+            self.text_frame = text_frame
+            self.p = text_frame.paragraphs[0]
+            self.current_run = self.p.add_run()
+            self.current_style = {"bold": False, "italic": False, "underline": False}
+            self.new_paragraph = False
+
+        def handle_starttag(self, tag, attrs):
+            if tag == "b":
+                self.current_style["bold"] = True
+            elif tag == "i":
+                self.current_style["italic"] = True
+            elif tag == "u":
+                self.current_style["underline"] = True
+            elif tag == "br":
+                self.p = self.text_frame.add_paragraph()
+                self.current_run = self.p.add_run()
+            elif tag == "p":
+                self.p = self.text_frame.add_paragraph()
+                self.current_run = self.p.add_run()
+
+        def handle_endtag(self, tag):
+            if tag == "b":
+                self.current_style["bold"] = False
+            elif tag == "i":
+                self.current_style["italic"] = False
+            elif tag == "u":
+                self.current_style["underline"] = False
+
+        def handle_data(self, data):
+            self.current_run = self.p.add_run()
+            self.current_run.text = html.unescape(data)
+            self.current_run.font.bold = self.current_style["bold"]
+            self.current_run.font.italic = self.current_style["italic"]
+            self.current_run.font.underline = self.current_style["underline"]
+
+    parser = PPTXHTMLParser(text_frame)
+    parser.feed(html)
+    text_frame.word_wrap = True
 
 
 def from_course(val, axis):
@@ -47,7 +89,7 @@ def add_textbox(slide, text, left, top, width, height, style, design_el=None):
     text_frame.clear()
     p = text_frame.paragraphs[0]
     run = p.add_run()
-    run.text = text
+    parse_formatted_html(text_frame, text)
     # Appliquer l'alignement
     alignment = style.get("align") if design_el is None else design_el.attrib.get("align")
     if alignment == "center":
@@ -124,7 +166,7 @@ def build_presentation(zip_file):
             for text_el in node.findall(".//text"):
                 text_id = text_el.attrib.get("id")
                 text_content_el = text_el.find(".//content")
-                text_content = clean_html(text_content_el.text) if text_content_el is not None else ""
+                text_content = text_content_el.text if text_content_el is not None else ""
                 design_el = text_el.find(".//design")
                 style = style_map.get(text_id, {})
 
