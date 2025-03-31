@@ -154,7 +154,7 @@ if uploaded_file:
             if video_file:
                 box = slide.shapes.add_textbox(Inches(3), Inches(3), Inches(6), Inches(1))
                 tf = box.text_frame
-                tf.text = f"\ud83c\udfa5 Vid\u00e9o : {video_file} \u00e0 int\u00e9grer"
+                tf.text = f" Vid\u00e9o : {video_file} \u00e0 int\u00e9grer"
                 tf.paragraphs[0].alignment = PP_ALIGN.CENTER
                 continue
 
