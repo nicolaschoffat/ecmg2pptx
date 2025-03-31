@@ -21,7 +21,7 @@ px_to_pt = {
 }
 
 st.set_page_config(page_title="ECMG to PowerPoint Converter")
-st.title("Convertisseur ECMG vers PowerPoint")
+st.title("\U0001F4E4 Convertisseur ECMG vers PowerPoint")
 
 uploaded_file = st.file_uploader("Upload un module ECMG (zip SCORM)", type="zip")
 
@@ -232,4 +232,4 @@ if uploaded_file:
         prs.save(output_path)
 
         with open(output_path, "rb") as f:
-            st.download_button("\ud83d\udcc5 T\u00e9l\u00e9charger le PowerPoint", data=f, file_name="module_ecmg_converti.pptx")
+            st.download_button("T\u00e9l\u00e9charger le PowerPoint", data=f, file_name="module_ecmg_converti.pptx")
