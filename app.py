@@ -1,3 +1,4 @@
+
 import streamlit as st
 import zipfile
 import tempfile
@@ -6,7 +7,7 @@ from bs4 import BeautifulSoup
 from xml.etree import ElementTree as ET
 from pptx import Presentation
 from pptx.util import Inches, Pt
-from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+from pptx.enum.text import PP_ALIGN, MSO_VERTICAL_ANCHOR
 from pptx.dml.color import RGBColor
 from html.parser import HTMLParser
 
@@ -81,13 +82,7 @@ def from_course(val, axis):
     return px * 0.01043
 
 def from_look(val):
-    return float(val) * 0.01043
-
-def to_inches(px):
-    try:
-        return float(str(px).strip()) * 0.0104
-    except:
-        return 1.0
+    return float(val) * 0.02646  # convert px to inch directly for look.xml
 
 if uploaded_file:
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -154,7 +149,7 @@ if uploaded_file:
             if video_file:
                 box = slide.shapes.add_textbox(Inches(3), Inches(3), Inches(6), Inches(1))
                 tf = box.text_frame
-                tf.text = f" Vidéo : {video_file} à intégrer"
+                tf.text = f"🎥 Vidéo : {video_file} à intégrer"
                 tf.paragraphs[0].alignment = PP_ALIGN.CENTER
                 continue
 
@@ -169,10 +164,14 @@ if uploaded_file:
                         back_html = card.find("back").text if card.find("back") is not None else ""
                         face = BeautifulSoup(face_html or "", "html.parser").get_text(separator=" ").strip()
                         back = BeautifulSoup(back_html or "", "html.parser").get_text(separator=" ").strip()
-                        feedback_texts.append(f"Carte : {head}\nFace : {face}\nBack : {back}")
+                        feedback_texts.append(f"Carte : {head}
+Face : {face}
+Back : {back}")
                 if feedback_texts:
                     notes.clear()
-                    notes.text = "\n---\n".join(feedback_texts)
+                    notes.text = "
+---
+".join(feedback_texts)
                 continue
 
             sound_blocks = screen.findall(".//sound")
@@ -185,9 +184,14 @@ if uploaded_file:
                     filename = content.attrib.get("file") if content is not None else None
                     audio_text = author_map.get(author_id)
                     if filename:
-                        audio_notes.append(f"Audio : {filename}\nTexte lu : {audio_text or '[non trouvé]'}")
+                        audio_notes.append(f"Audio : {filename}
+Texte lu : {audio_text or '[non trouvé]'}")
                 if audio_notes:
-                    notes.text += "\n\n" + "\n---\n".join(audio_notes)
+                    notes.text += "
+
+" + "
+---
+".join(audio_notes)
 
             elfe = screen.find("elfe")
             if elfe is not None and elfe.find("content") is not None and elfe.find("content").attrib.get("type") == "MCQText":
@@ -221,15 +225,18 @@ if uploaded_file:
                 if content_el is None or not content_el.text:
                     continue
                 text_id = el.attrib.get("id") or el.attrib.get("author_id")
-                style = style_map.get(text_id, {})
+                style = {}
                 design_el = el.find("design")
+                if design_el is not None:
+                    style = design_el.attrib
+                elif text_id in style_map:
+                    style = style_map[text_id]
 
-                top = from_course(design_el.attrib.get("top", 0), "y") if design_el is not None else from_look(style.get("top", 0))
-                left = from_course(design_el.attrib.get("left", 0), "x") if design_el is not None else from_look(style.get("left", 0))
-                width = from_course(design_el.attrib.get("width", 140), "x") if design_el is not None else from_look(style.get("width", 140))
-                height = from_course(design_el.attrib.get("height", 10), "y") if design_el is not None else from_look(style.get("height", 10))
+                top = from_course(style.get("top", 0), "y") if design_el is not None else from_look(style.get("top", 0))
+                left = from_course(style.get("left", 0), "x") if design_el is not None else from_look(style.get("left", 0))
+                width = from_course(style.get("width", 140), "x") if design_el is not None else from_look(style.get("width", 140))
+                height = from_course(style.get("height", 10), "y") if design_el is not None else from_look(style.get("height", 10))
 
-                st.text(f"Ajout box at → top={top}, left={left}, width={width}, height={height}")
                 box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
                 tf = box.text_frame
                 tf.clear()
@@ -243,14 +250,13 @@ if uploaded_file:
                 else:
                     tf.paragraphs[0].alignment = PP_ALIGN.LEFT
 
-                if "valign" in style:
-                    valign = style.get("valign", "").lower()
-                    if valign == "middle":
-                        tf.vertical_anchor = MSO_ANCHOR.MIDDLE
-                    elif valign == "bottom":
-                        tf.vertical_anchor = MSO_ANCHOR.BOTTOM
-                    else:
-                        tf.vertical_anchor = MSO_ANCHOR.TOP
+                valign = style.get("valign", "").lower()
+                if valign == "middle":
+                    tf.vertical_anchor = MSO_VERTICAL_ANCHOR.MIDDLE
+                elif valign == "bottom":
+                    tf.vertical_anchor = MSO_VERTICAL_ANCHOR.BOTTOM
+                else:
+                    tf.vertical_anchor = MSO_VERTICAL_ANCHOR.TOP
 
                 parser = HTMLtoPPTX(tf, style)
                 parser.feed(content_el.text)
