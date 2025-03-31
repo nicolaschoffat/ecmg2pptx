@@ -21,7 +21,7 @@ px_to_pt = {
 }
 
 st.set_page_config(page_title="ECMG to PowerPoint Converter")
-st.title("\ud83d\udcc4 Convertisseur ECMG vers PowerPoint")
+st.title("Convertisseur ECMG vers PowerPoint")
 
 uploaded_file = st.file_uploader("Upload un module ECMG (zip SCORM)", type="zip")
 
