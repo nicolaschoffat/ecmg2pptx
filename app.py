@@ -216,6 +216,7 @@ if uploaded_file:
                 box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
                 tf = box.text_frame
                 tf.clear()
+                tf.word_wrap = True  # Force le retour à la ligne
                 parser = HTMLtoPPTX(tf)
                 parser.feed(content_el.text)
 
