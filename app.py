@@ -169,31 +169,29 @@ if uploaded_file:
                 text_id = el.attrib.get("id") or el.attrib.get("author_id")
                 style = style_map.get(text_id, {})
                 design_el = el.find("design")
-has_coords = lambda d: d is not None and any(attr in d.attrib for attr in ["top", "left", "width", "height"])
 
-if has_coords(design_el):
-    source = "course.xml"
-    top_px = float(design_el.attrib.get("top", 0))
-    left_px = float(design_el.attrib.get("left", 0))
-    width_px = float(design_el.attrib.get("width", 140))
-    height_px = float(design_el.attrib.get("height", 10))
+                if design_el is not None:
+                    source = "course.xml"
+                    top_px = float(design_el.attrib.get("top", 0))
+                    left_px = float(design_el.attrib.get("left", 0))
+                    width_px = float(design_el.attrib.get("width", 140))
+                    height_px = float(design_el.attrib.get("height", 10))
 
-    top = from_course(top_px, "y")
-    left = from_course(left_px, "x")
-    width = from_course(width_px, "x")
-    height = from_course(height_px, "y")
-else:
-    source = "look.xml"
-    top_px = float(style.get("top", 0))
-    left_px = float(style.get("left", 0))
-    width_px = float(style.get("width", 140))
-    height_px = float(style.get("height", 10))
+                    top = from_course(top_px, "y")
+                    left = from_course(left_px, "x")
+                    width = from_course(width_px, "x")
+                    height = from_course(height_px, "y")
+                else:
+                    source = "look.xml"
+                    top_px = float(style.get("top", 0))
+                    left_px = float(style.get("left", 0))
+                    width_px = float(style.get("width", 140))
+                    height_px = float(style.get("height", 10))
 
-    top = from_look(top_px)
-    left = from_look(left_px)
-    width = from_look(width_px)
-    height = from_look(height_px)
-
+                    top = from_look(top_px)
+                    left = from_look(left_px)
+                    width = from_look(width_px)
+                    height = from_look(height_px)
 
                 st.text(
                     f"[{source}] Texte ID='{text_id}' → px: (l={left_px}, t={top_px}, w={width_px}, h={height_px}) | pouces: (l={left:.2f}, t={top:.2f}, w={width:.2f}, h={height:.2f})"
