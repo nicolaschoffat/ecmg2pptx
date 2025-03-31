@@ -10,20 +10,17 @@ from pptx.enum.text import PP_ALIGN
 from pptx.dml.color import RGBColor
 from html.parser import HTMLParser
 
-px_to_pt = {
-    20: 15,
-    25: 18,
-    30: 22,
-    35: 26,
-    40: 30,
-    45: 34,
-    50: 38
-}
-
 st.set_page_config(page_title="ECMG to PowerPoint Converter")
 st.title("📤 Convertisseur ECMG vers PowerPoint")
 
 uploaded_file = st.file_uploader("Upload un module ECMG (zip SCORM)", type="zip")
+
+PX_TO_PT = {
+    10: 7, 11: 8, 12: 9, 14: 10, 16: 12, 18: 13,
+    20: 15, 22: 17, 24: 18, 26: 20, 28: 21, 30: 22,
+    32: 24, 35: 26, 40: 30, 45: 34, 50: 36, 55: 40,
+    60: 45, 65: 50, 70: 55, 75: 60, 80: 64
+}
 
 class HTMLtoPPTX(HTMLParser):
     def __init__(self, text_frame, style=None):
@@ -32,61 +29,34 @@ class HTMLtoPPTX(HTMLParser):
         self.p = text_frame.paragraphs[0]
         self.run = self.p.add_run()
         self.style = {"bold": False, "italic": False}
-        self.default_style = style or {}
-        self.set_paragraph_alignment()
+        self.default_size = int(style.get("fontsize", "20")) if style else 20
+        self.default_color = style.get("fontcolor", "#000000") if style else "#000000"
 
-     def set_paragraph_alignment(self):
-        align = self.default_style.get("align", "").lower()
-        if align == "center":
-            self.p.alignment = PP_ALIGN.CENTER
-        elif align == "right":
-            self.p.alignment = PP_ALIGN.RIGHT
-        else:
-            self.p.alignment = PP_ALIGN.LEFT  # défaut
-    
     def handle_starttag(self, tag, attrs):
-        if tag == "b":
-            self.style["bold"] = True
-        elif tag == "i":
-            self.style["italic"] = True
+        if tag == "b": self.style["bold"] = True
+        if tag == "i": self.style["italic"] = True
         self.run = self.p.add_run()
-        self.apply_style()
+        self.apply_style(self.run)
 
     def handle_endtag(self, tag):
-        if tag == "b":
-            self.style["bold"] = False
-        elif tag == "i":
-            self.style["italic"] = False
+        if tag == "b": self.style["bold"] = False
+        if tag == "i": self.style["italic"] = False
         self.run = self.p.add_run()
-        self.apply_style()
+        self.apply_style(self.run)
 
     def handle_data(self, data):
         self.run.text += data
 
-    def apply_style(self):
-        font = self.run.font
-        font.bold = self.style["bold"]
-        font.italic = self.style["italic"]
-
-        # 🎨 Application des styles ECMG
-        if "font" in self.default_style:
-            font.name = self.default_style["font"]
-        if "fontcolor" in self.default_style:
-            color = self.default_style["fontcolor"].lstrip("#")
-            if len(color) == 6:
-                font.color.rgb = RGBColor.from_string(color.upper())
-        if "fontsize" in self.default_style:
-            try:
-                px = int(self.default_style["fontsize"])
-                pt = px_to_pt.get(px, int(px * 0.75))
-                font.size = Pt(pt)
-            except:
-                pass
-
+    def apply_style(self, run):
+        run.font.bold = self.style["bold"]
+        run.font.italic = self.style["italic"]
+        run.font.size = Pt(PX_TO_PT.get(self.default_size, self.default_size))
+        hex_color = self.default_color.lstrip("#")
+        run.font.color.rgb = RGBColor(int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16))
 
 def from_course(val, axis):
     if axis == "y":
-        corrected = float(val) + 10.917  # shift from -10.917 to 0
+        corrected = float(val) + 10.917
         px = corrected / 152.838 * 700
     else:
         px = float(val) / 149.351 * 1150
@@ -94,14 +64,6 @@ def from_course(val, axis):
 
 def from_look(val):
     return float(val) * 0.01043
-
-
-
-def to_inches(px):
-    try:
-        return float(str(px).strip()) * 0.0104
-    except:
-        return 1.0
 
 if uploaded_file:
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -138,13 +100,6 @@ if uploaded_file:
                 if "author_id" in el.attrib:
                     style_map[el.attrib["author_id"]] = design.attrib
 
-        author_tree = ET.parse(author_path)
-        author_root = author_tree.getroot()
-        author_map = {
-            el.attrib.get("id"): el.findtext("description")
-            for el in author_root.findall(".//item")
-        }
-
         prs = Presentation()
         prs.slide_width = Inches(12)
         prs.slide_height = Inches(7.3)
@@ -154,80 +109,10 @@ if uploaded_file:
             title_text = title_el.text.strip() if title_el is not None else "Sans titre"
             slide = prs.slides.add_slide(prs.slide_layouts[5])
             slide.shapes.title.text = title_text
+
             page = node.find(".//page")
             screen = page.find("screen") if page is not None else None
             if not screen:
-                continue
-            y = 1.5
-
-            video_file = None
-            for content_el in screen.findall(".//content"):
-                if "file" in content_el.attrib and content_el.attrib["file"].endswith(".mp4"):
-                    video_file = content_el.attrib["file"]
-                    break
-            if video_file:
-                box = slide.shapes.add_textbox(Inches(3), Inches(3), Inches(6), Inches(1))
-                tf = box.text_frame
-                tf.text = f"🎥 Vidéo : {video_file} à intégrer"
-                tf.paragraphs[0].alignment = PP_ALIGN.CENTER
-                continue
-
-            cards_blocks = screen.findall(".//cards")
-            if cards_blocks:
-                notes = slide.notes_slide.notes_text_frame
-                feedback_texts = []
-                for cards in cards_blocks:
-                    for card in cards.findall("card"):
-                        head = card.find("head").text.strip() if card.find("head") is not None else ""
-                        face_html = card.find("face").text if card.find("face") is not None else ""
-                        back_html = card.find("back").text if card.find("back") is not None else ""
-                        face = BeautifulSoup(face_html or "", "html.parser").get_text(separator=" ").strip()
-                        back = BeautifulSoup(back_html or "", "html.parser").get_text(separator=" ").strip()
-                        feedback_texts.append(f"Carte : {head}\nFace : {face}\nBack : {back}")
-                if feedback_texts:
-                    notes.clear()
-                    notes.text = "\n---\n".join(feedback_texts)
-                continue
-
-            sound_blocks = screen.findall(".//sound")
-            if sound_blocks:
-                notes = slide.notes_slide.notes_text_frame
-                audio_notes = []
-                for snd in sound_blocks:
-                    author_id = snd.attrib.get("author_id")
-                    content = snd.find("content")
-                    filename = content.attrib.get("file") if content is not None else None
-                    audio_text = author_map.get(author_id)
-                    if filename:
-                        audio_notes.append(f"Audio : {filename}\nTexte lu : {audio_text or '[non trouvé]'}")
-                if audio_notes:
-                    notes.text += "\n\n" + "\n---\n".join(audio_notes)
-
-            elfe = screen.find("elfe")
-            if elfe is not None and elfe.find("content") is not None and elfe.find("content").attrib.get("type") == "MCQText":
-                items = elfe.find("content/items")
-                question_el = screen.find("question")
-                if question_el is not None:
-                    question_text = BeautifulSoup(question_el.find("content").text, "html.parser").get_text()
-                    box = slide.shapes.add_textbox(Inches(1), Inches(y), Inches(10), Inches(1))
-                    box.text_frame.text = f"❓ {question_text}"
-                    y += 1.0
-                for item in items.findall("item"):
-                    score = item.attrib.get("score", "0")
-                    label = "✅" if score == "100" else "⬜"
-                    box = slide.shapes.add_textbox(Inches(1.2), Inches(y), Inches(9.5), Inches(0.5))
-                    box.text_frame.text = f"{label} {item.text.strip()}"
-                    y += 0.5
-                feedbacks = page.findall(".//feedbacks/correc/fb/screen/feedback")
-                notes = slide.notes_slide.notes_text_frame
-                feedback_texts = []
-                for fb in feedbacks:
-                    fb_content = fb.find("content")
-                    if fb_content is not None and fb_content.text:
-                        soup = BeautifulSoup(fb_content.text, "html.parser")
-                        feedback_texts.append(soup.get_text(separator="\n"))
-                if feedback_texts:
-                    notes.text += "\n---\n" + "\n---\n".join(feedback_texts)
                 continue
 
             for el in screen.findall("text"):
@@ -236,35 +121,25 @@ if uploaded_file:
                     continue
                 text_id = el.attrib.get("id") or el.attrib.get("author_id")
                 style = style_map.get(text_id, {})
-                st.text(f"text_id = {text_id} → style = {style}")
                 design_el = el.find("design")
-                if design_el is not None:
-                    top = from_course(design_el.attrib.get("top", 0), "y")
-                else:
-                    top = from_look(style.get("top", 0))
-                if design_el is not None:
-                    left = from_course(design_el.attrib.get("left", 0), "x")
-                else:
-                    left = from_look(style.get("left", 0))
-                if design_el is not None:
-                    width = from_course(design_el.attrib.get("width", 140), "x")
-                else:
-                    width = from_look(style.get("width", 140))
-                if design_el is not None:
-                    height = from_course(design_el.attrib.get("height", 10), "y")
-                else:
-                    height = from_look(style.get("height", 10))
-                st.text(f"Ajout box at → top={top}, left={left}, width={width}, height={height}")
+                top = from_course(design_el.attrib["top"], "y") if design_el is not None and "top" in design_el.attrib else from_look(float(style.get("top", "0")))
+                left = from_course(design_el.attrib["left"], "x") if design_el is not None and "left" in design_el.attrib else from_look(float(style.get("left", "0")))
+                width = from_course(design_el.attrib["width"], "x") if design_el is not None and "width" in design_el.attrib else from_look(float(style.get("width", "140")))
+                height = from_course(design_el.attrib["height"], "y") if design_el is not None and "height" in design_el.attrib else from_look(float(style.get("height", "10")))
                 box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
                 tf = box.text_frame
-                tf.vertical_anchor = PP_ALIGN.MIDDLE
                 tf.clear()
-                tf.word_wrap = True  # Force le retour à la ligne
+                tf.word_wrap = True
+                if "align" in style and style["align"] == "center":
+                    tf.paragraphs[0].alignment = PP_ALIGN.CENTER
+                elif style.get("align") == "right":
+                    tf.paragraphs[0].alignment = PP_ALIGN.RIGHT
+                else:
+                    tf.paragraphs[0].alignment = PP_ALIGN.LEFT
                 parser = HTMLtoPPTX(tf, style)
                 parser.feed(content_el.text)
 
         output_path = os.path.join(tmpdir, "converted.pptx")
         prs.save(output_path)
-
         with open(output_path, "rb") as f:
             st.download_button("📥 Télécharger le PowerPoint", data=f, file_name="module_ecmg_converti.pptx")
