@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 from xml.etree import ElementTree as ET
 from pptx import Presentation
 from pptx.util import Inches, Pt
-from pptx.enum.text import PP_ALIGN
+from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.dml.color import RGBColor
 from html.parser import HTMLParser
 
@@ -154,7 +154,7 @@ if uploaded_file:
             if video_file:
                 box = slide.shapes.add_textbox(Inches(3), Inches(3), Inches(6), Inches(1))
                 tf = box.text_frame
-                tf.text = f" Vid\u00e9o : {video_file} \u00e0 int\u00e9grer"
+                tf.text = f" Vidéo : {video_file} à intégrer"
                 tf.paragraphs[0].alignment = PP_ALIGN.CENTER
                 continue
 
@@ -185,9 +185,36 @@ if uploaded_file:
                     filename = content.attrib.get("file") if content is not None else None
                     audio_text = author_map.get(author_id)
                     if filename:
-                        audio_notes.append(f"Audio : {filename}\nTexte lu : {audio_text or '[non trouv\u00e9]'}")
+                        audio_notes.append(f"Audio : {filename}\nTexte lu : {audio_text or '[non trouvé]'}")
                 if audio_notes:
                     notes.text += "\n\n" + "\n---\n".join(audio_notes)
+
+            elfe = screen.find("elfe")
+            if elfe is not None and elfe.find("content") is not None and elfe.find("content").attrib.get("type") == "MCQText":
+                items = elfe.find("content/items")
+                question_el = screen.find("question")
+                if question_el is not None:
+                    question_text = BeautifulSoup(question_el.find("content").text, "html.parser").get_text()
+                    box = slide.shapes.add_textbox(Inches(1), Inches(y), Inches(10), Inches(1))
+                    box.text_frame.text = f"❓ {question_text}"
+                    y += 1.0
+                for item in items.findall("item"):
+                    score = item.attrib.get("score", "0")
+                    label = "✅" if score == "100" else "⬜"
+                    box = slide.shapes.add_textbox(Inches(1.2), Inches(y), Inches(9.5), Inches(0.5))
+                    box.text_frame.text = f"{label} {item.text.strip()}"
+                    y += 0.5
+                feedbacks = page.findall(".//feedbacks/correc/fb/screen/feedback")
+                notes = slide.notes_slide.notes_text_frame
+                feedback_texts = []
+                for fb in feedbacks:
+                    fb_content = fb.find("content")
+                    if fb_content is not None and fb_content.text:
+                        soup = BeautifulSoup(fb_content.text, "html.parser")
+                        feedback_texts.append(soup.get_text(separator="\n"))
+                if feedback_texts:
+                    notes.text += "\n---\n" + "\n---\n".join(feedback_texts)
+                continue
 
             for el in screen.findall("text"):
                 content_el = el.find("content")
@@ -202,7 +229,7 @@ if uploaded_file:
                 width = from_course(design_el.attrib.get("width", 140), "x") if design_el is not None else from_look(style.get("width", 140))
                 height = from_course(design_el.attrib.get("height", 10), "y") if design_el is not None else from_look(style.get("height", 10))
 
-                st.text(f"Ajout box at \u2192 top={top}, left={left}, width={width}, height={height}")
+                st.text(f"Ajout box at → top={top}, left={left}, width={width}, height={height}")
                 box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
                 tf = box.text_frame
                 tf.clear()
@@ -219,11 +246,11 @@ if uploaded_file:
                 if "valign" in style:
                     valign = style.get("valign", "").lower()
                     if valign == "middle":
-                        tf.vertical_anchor = PP_ALIGN.CENTER
+                        tf.vertical_anchor = MSO_ANCHOR.MIDDLE
                     elif valign == "bottom":
-                        tf.vertical_anchor = PP_ALIGN.BOTTOM
+                        tf.vertical_anchor = MSO_ANCHOR.BOTTOM
                     else:
-                        tf.vertical_anchor = PP_ALIGN.TOP
+                        tf.vertical_anchor = MSO_ANCHOR.TOP
 
                 parser = HTMLtoPPTX(tf, style)
                 parser.feed(content_el.text)
@@ -232,4 +259,4 @@ if uploaded_file:
         prs.save(output_path)
 
         with open(output_path, "rb") as f:
-            st.download_button("T\u00e9l\u00e9charger le PowerPoint", data=f, file_name="module_ecmg_converti.pptx")
+            st.download_button("📥 Télécharger le PowerPoint", data=f, file_name="module_ecmg_converti.pptx")
