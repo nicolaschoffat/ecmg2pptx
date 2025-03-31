@@ -10,28 +10,43 @@ from pptx.enum.text import PP_ALIGN
 from pptx.dml.color import RGBColor
 from html.parser import HTMLParser
 
+px_to_pt = {
+    20: 15,
+    25: 18,
+    30: 22,
+    35: 26,
+    40: 30,
+    45: 34,
+    50: 38
+}
+
 st.set_page_config(page_title="ECMG to PowerPoint Converter")
 st.title("📤 Convertisseur ECMG vers PowerPoint")
 
 uploaded_file = st.file_uploader("Upload un module ECMG (zip SCORM)", type="zip")
 
 class HTMLtoPPTX(HTMLParser):
-    def __init__(self, text_frame):
+    def __init__(self, text_frame, style=None):
         super().__init__()
         self.tf = text_frame
         self.p = text_frame.paragraphs[0]
         self.run = self.p.add_run()
         self.style = {"bold": False, "italic": False}
+        self.default_style = style or {}
 
     def handle_starttag(self, tag, attrs):
-        if tag == "b": self.style["bold"] = True
-        if tag == "i": self.style["italic"] = True
+        if tag == "b":
+            self.style["bold"] = True
+        elif tag == "i":
+            self.style["italic"] = True
         self.run = self.p.add_run()
         self.apply_style()
 
     def handle_endtag(self, tag):
-        if tag == "b": self.style["bold"] = False
-        if tag == "i": self.style["italic"] = False
+        if tag == "b":
+            self.style["bold"] = False
+        elif tag == "i":
+            self.style["italic"] = False
         self.run = self.p.add_run()
         self.apply_style()
 
@@ -39,8 +54,25 @@ class HTMLtoPPTX(HTMLParser):
         self.run.text += data
 
     def apply_style(self):
-        self.run.font.bold = self.style["bold"]
-        self.run.font.italic = self.style["italic"]
+        font = self.run.font
+        font.bold = self.style["bold"]
+        font.italic = self.style["italic"]
+
+        # 🎨 Application des styles ECMG
+        if "font" in self.default_style:
+            font.name = self.default_style["font"]
+        if "fontcolor" in self.default_style:
+            color = self.default_style["fontcolor"].lstrip("#")
+            if len(color) == 6:
+                font.color.rgb = RGBColor.from_string(color.upper())
+        if "fontsize" in self.default_style:
+            try:
+                px = int(self.default_style["fontsize"])
+                pt = px_to_pt.get(px, int(px * 0.75))
+                font.size = Pt(pt)
+            except:
+                pass
+
 
 def from_course(val, axis):
     if axis == "y":
@@ -217,7 +249,7 @@ if uploaded_file:
                 tf = box.text_frame
                 tf.clear()
                 tf.word_wrap = True  # Force le retour à la ligne
-                parser = HTMLtoPPTX(tf)
+                parser = HTMLtoPPTX(tf, style)
                 parser.feed(content_el.text)
 
         output_path = os.path.join(tmpdir, "converted.pptx")
