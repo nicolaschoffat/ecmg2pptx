@@ -33,7 +33,17 @@ class HTMLtoPPTX(HTMLParser):
         self.run = self.p.add_run()
         self.style = {"bold": False, "italic": False}
         self.default_style = style or {}
+        self.set_paragraph_alignment()
 
+     def set_paragraph_alignment(self):
+        align = self.default_style.get("align", "").lower()
+        if align == "center":
+            self.p.alignment = PP_ALIGN.CENTER
+        elif align == "right":
+            self.p.alignment = PP_ALIGN.RIGHT
+        else:
+            self.p.alignment = PP_ALIGN.LEFT  # défaut
+    
     def handle_starttag(self, tag, attrs):
         if tag == "b":
             self.style["bold"] = True
@@ -247,6 +257,7 @@ if uploaded_file:
                 st.text(f"Ajout box at → top={top}, left={left}, width={width}, height={height}")
                 box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
                 tf = box.text_frame
+                tf.vertical_anchor = PP_ALIGN.MIDDLE
                 tf.clear()
                 tf.word_wrap = True  # Force le retour à la ligne
                 parser = HTMLtoPPTX(tf, style)
