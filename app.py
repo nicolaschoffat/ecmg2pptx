@@ -20,8 +20,6 @@ px_to_pt = {
     50: 38
 }
 
-OFFSET_CORRECTION_INCHES = -0.1  # Correction du décalage (~0.27 cm)
-
 st.set_page_config(page_title="ECMG to PowerPoint Converter")
 st.title("\U0001F4E4 Convertisseur ECMG vers PowerPoint")
 
@@ -167,8 +165,8 @@ if uploaded_file:
                 width = from_look(float(title_style.get("width", 800)))
                 height = from_look(float(title_style.get("height", 50)))
                 title_shape = slide.shapes.title
-                title_shape.left = Inches(left)
-                title_shape.top = Inches(top)
+                title_shape.left = Inches(left + 0.1)
+                title_shape.top = Inches(top + 0.1)
                 title_shape.width = Inches(width)
                 title_shape.height = Inches(height)
             except Exception as e:
@@ -303,7 +301,7 @@ if uploaded_file:
                 st.text(f'🔍 Image path testé : {image_path}')
                 if os.path.exists(image_path):
                     try:
-                        slide.shapes.add_picture(image_path, Inches(left + OFFSET_CORRECTION_INCHES), Inches(top + OFFSET_CORRECTION_INCHES), width=Inches(width), height=Inches(height))
+                        slide.shapes.add_picture(image_path, Inches(left + 0.1), Inches(top + 0.1), width=Inches(width), height=Inches(height))
                     except Exception as e:
                         st.warning(f"⚠️ Erreur ajout image {img_file} : {e}")
                 else:
@@ -349,7 +347,7 @@ if uploaded_file:
 
                     f"[{source}] Texte ID='{text_id}' → px: (l={left_px}, t={top_px}, w={width_px}, h={height_px}) | pouces: (l={left:.2f}, t={top:.2f}, w={width:.2f}, h={height:.2f})"
 
-                box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
+                box = slide.shapes.add_textbox(Inches(left + 0.1), Inches(top + 0.1), Inches(width), Inches(height))
                 tf = box.text_frame
                 tf.clear()
                 tf.word_wrap = True
