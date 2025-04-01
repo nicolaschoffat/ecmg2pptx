@@ -50,7 +50,6 @@ class HTMLtoPPTX(HTMLParser):
                 self.default_style["fontcolor"] = attrs["color"]
             if "size" in attrs:
                 try:
-                    px = int(attrs["size"])
                     self.default_style["fontsize"] = px
                 except:
                     pass
@@ -84,12 +83,10 @@ class HTMLtoPPTX(HTMLParser):
             color = self.default_style["fontcolor"].lstrip("#")
             if len(color) == 6:
                 try:
-                    font.color.rgb = RGBColor.from_string(color.upper())
                 except ValueError:
                     pass
         if "fontsize" in self.default_style:
             try:
-                px = int(self.default_style["fontsize"])
                 pt = px_to_pt.get(px, int(px * 0.75))
                 font.size = Pt(pt)
             except:
@@ -161,7 +158,6 @@ if uploaded_file:
             title_style = style_map.get("titre_activite")
             # 📐 Repositionnement/Redimensionnement de la zone de titre
             try:
-                top = from_look(float(title_style.get("top", 0)))
                 left = from_look(float(title_style.get("left", 0)))
                 width = from_look(float(title_style.get("width", 800)))
                 height = from_look(float(title_style.get("height", 50)))
@@ -181,7 +177,6 @@ if uploaded_file:
                 font = run.font
                 font.name = title_style.get("font", "Tahoma")
                 try:
-                    fontsize = int(title_style.get("fontsize", 22))
                     font.size = Pt(px_to_pt.get(fontsize, int(fontsize * 0.75)))
                 except:
                     font.size = Pt(16.5)
@@ -190,7 +185,6 @@ if uploaded_file:
                 color = title_style.get("fontcolor", "#000000").lstrip("#")
                 if len(color) == 6:
                     try:
-                        font.color.rgb = RGBColor.from_string(color.upper())
                     except ValueError:
                         pass
                 align = title_style.get("align", "left").lower()
@@ -302,7 +296,6 @@ if uploaded_file:
                 st.text(f'🔍 Image path testé : {image_path}')
                 if os.path.exists(image_path):
                     try:
-                # 🔍 Calcul du redimensionnement proportionnel
                     with Image.open(image_path) as im:
                         img_width_px, img_height_px = im.size
                     # Conversion ECMG en pixels
