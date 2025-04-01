@@ -174,10 +174,11 @@ if uploaded_file:
             align = title_style.get("align", "left").lower()
             if align == "center":
                 p.alignment = PP_ALIGN.CENTER
-            run.text = title_text
             elif align == "right":
                 p.alignment = PP_ALIGN.RIGHT
             else:
+                p.alignment = PP_ALIGN.LEFT
+            run.text = title_text
                 p.alignment = PP_ALIGN.LEFT
             run.text = title_text
         # 🎨 Style appliqué au titre natif de la slide
@@ -205,10 +206,11 @@ if uploaded_file:
             align = title_style.get("align", "left").lower()
             if align == "center":
                 p.alignment = PP_ALIGN.CENTER
-            run.text = title_text
             elif align == "right":
                 p.alignment = PP_ALIGN.RIGHT
             else:
+                p.alignment = PP_ALIGN.LEFT
+            run.text = title_text
                 p.alignment = PP_ALIGN.LEFT
             font = run.font
             font.name = title_style.get("font", "Tahoma")
@@ -226,10 +228,11 @@ if uploaded_file:
             align = title_style.get("align", "").lower()
             if align == "center":
                 p.alignment = PP_ALIGN.CENTER
-            run.text = title_text
             elif align == "right":
                 p.alignment = PP_ALIGN.RIGHT
             else:
+                p.alignment = PP_ALIGN.LEFT
+            run.text = title_text
                 p.alignment = PP_ALIGN.LEFT
 
 
