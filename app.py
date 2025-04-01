@@ -20,6 +20,8 @@ px_to_pt = {
     50: 38
 }
 
+OFFSET_CORRECTION_INCHES = -0.1  # Correction du décalage (~0.27 cm)
+
 st.set_page_config(page_title="ECMG to PowerPoint Converter")
 st.title("\U0001F4E4 Convertisseur ECMG vers PowerPoint")
 
@@ -301,7 +303,7 @@ if uploaded_file:
                 st.text(f'🔍 Image path testé : {image_path}')
                 if os.path.exists(image_path):
                     try:
-                        slide.shapes.add_picture(image_path, Inches(left), Inches(top), width=Inches(width), height=Inches(height))
+                        slide.shapes.add_picture(image_path, Inches(left + OFFSET_CORRECTION_INCHES), Inches(top + OFFSET_CORRECTION_INCHES), width=Inches(width), height=Inches(height))
                     except Exception as e:
                         st.warning(f"⚠️ Erreur ajout image {img_file} : {e}")
                 else:
