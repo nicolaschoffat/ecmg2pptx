@@ -162,7 +162,6 @@ if uploaded_file:
             try:
                 pass  # FIXME: bloc try sans except supprimé
                 try:
-                pass  # FIXME: bloc try sans except supprimé
                     font.size = Pt(16.5)
                 font.bold = title_style.get("bold", "0") == "1"
                 font.italic = title_style.get("italic", "0") == "1"
