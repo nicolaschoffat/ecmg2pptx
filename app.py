@@ -292,7 +292,7 @@ if uploaded_file:
                     width = from_look(width_px)
                     height = from_look(height_px)
 
-                image_path = os.path.join(tmpdir, img_file)
+                image_path = os.path.join(tmpdir, '_course', os.path.basename(img_file))
                 if os.path.exists(image_path):
                     try:
                         slide.shapes.add_picture(image_path, Inches(left), Inches(top), width=Inches(width), height=Inches(height))
