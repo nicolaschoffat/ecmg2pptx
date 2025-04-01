@@ -112,6 +112,20 @@ if uploaded_file:
         root = tree.getroot()
         nodes = root.findall(".//node")
 
+        # 🔤 Titre stylé depuis look.xml (titre_activite)
+        look_tree = ET.parse(look_path)
+        look_root = look_tree.getroot()
+        style_map = {}
+        for el in look_root.findall(".//*[@id]"):
+            design = el.find("design")
+            if design is not None:
+                style_map[el.attrib["id"]] = design.attrib
+                if "author_id" in el.attrib:
+                    style_map[el.attrib["author_id"]] = design.attrib
+
+        title_style = style_map.get("titre_activite")
+
+
         prs = Presentation()
         prs.slide_width = Inches(12)
         prs.slide_height = Inches(7.3)
@@ -122,6 +136,40 @@ if uploaded_file:
             st.text(f"➡️ Slide {i+1}: {title_text}")
             slide = prs.slides.add_slide(prs.slide_layouts[5])
             slide.shapes.title.text = title_text
+
+        if title_style:
+            top = from_look(float(title_style.get("top", 20)))
+            left = from_look(float(title_style.get("left", 10)))
+            width = from_look(float(title_style.get("width", 800)))
+            height = from_look(float(title_style.get("height", 50)))
+            box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
+            tf = box.text_frame
+            tf.clear()
+            tf.word_wrap = True
+            p = tf.paragraphs[0]
+            run = p.add_run()
+            run.text = title_text
+            font = run.font
+            font.name = title_style.get("font", "Tahoma")
+            try:
+                fontsize = int(title_style.get("fontsize", 20))
+                pt = px_to_pt.get(fontsize, int(fontsize * 0.75))
+                font.size = Pt(pt)
+            except:
+                pass
+            font.bold = title_style.get("bold", "0") == "1"
+            font.italic = title_style.get("italic", "0") == "1"
+            color = title_style.get("fontcolor", "#000000").lstrip("#")
+            if len(color) == 6:
+                font.color.rgb = RGBColor.from_string(color.upper())
+            align = title_style.get("align", "").lower()
+            if align == "center":
+                p.alignment = PP_ALIGN.CENTER
+            elif align == "right":
+                p.alignment = PP_ALIGN.RIGHT
+            else:
+                p.alignment = PP_ALIGN.LEFT
+
 
         output_path = os.path.join(tmpdir, "converted.pptx")
         prs.save(output_path)
