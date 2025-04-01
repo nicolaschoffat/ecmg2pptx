@@ -148,7 +148,6 @@ if uploaded_file:
             title_text = title_el.text.strip() if title_el is not None else f"Slide {i+1}"
             st.text(f"➡️ Slide {i+1}: {title_text}")
             slide = prs.slides.add_slide(prs.slide_layouts[5])
-            slide.shapes.title.text = title_text
         if title_style:
             top = from_look(float(title_style.get("top", 20)))
             left = from_look(float(title_style.get("left", 10)))
