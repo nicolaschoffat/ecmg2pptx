@@ -301,7 +301,9 @@ if uploaded_file:
                 st.text(f'🔍 Image path testé : {image_path}')
                 if os.path.exists(image_path):
                     try:
-                        slide.shapes.add_picture(image_path, Inches(left), Inches(top), width=Inches(width), height=Inches(height))
+                        pic = slide.shapes.add_picture(image_path, Inches(left), Inches(top))
+                        pic.width = Inches(width)
+                        pic.height = Inches(height)
                     except Exception as e:
                         st.warning(f"⚠️ Erreur ajout image {img_file} : {e}")
                 else:
