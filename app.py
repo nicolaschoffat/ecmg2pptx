@@ -150,7 +150,18 @@ if uploaded_file:
         prs.slide_width = Inches(12)
         prs.slide_height = Inches(7.3)
 
+        
+        log_text = st.empty()
+        log_lines = []
+
         for i, node in enumerate(nodes):
+            title_el = node.find("./metadata/title")
+            title_text = title_el.text.strip() if title_el is not None else "Sans titre"
+            log_lines.append(f"Slide {i + 1}/{len(nodes)} : {title_text}")
+            log_text.text("\n".join(log_lines))
+            slide = prs.slides.add_slide(prs.slide_layouts[5])
+            slide.shapes.title.text = title_text
+
             title_el = node.find("./metadata/title")
             title_text = title_el.text.strip() if title_el is not None else "Sans titre"
             st.write(f"🔄 Slide {i + 1}/{len(nodes)} : {title_text}")
