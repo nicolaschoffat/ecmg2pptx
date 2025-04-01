@@ -105,6 +105,7 @@ def from_look(val):
 
 
     for i, node in enumerate(nodes):
+        st.write(f"🔄 Traitement de la slide {i + 1}/{len(nodes)}: {title_text}")
         title_el = node.find("./metadata/title")
         title_text = title_el.text.strip() if title_el is not None else "Sans titre"
         slide = prs.slides.add_slide(prs.slide_layouts[5])
