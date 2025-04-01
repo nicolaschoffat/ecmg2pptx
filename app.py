@@ -1,3 +1,4 @@
+
 import streamlit as st
 import zipfile
 import tempfile
@@ -170,7 +171,15 @@ if uploaded_file:
                 style = style_map.get(text_id, {})
                 design_el = el.find("design")
 
-                if design_el is not None:
+                def has_position_attrs(d):
+                    return (
+                        d is not None and any(
+                            attr in d.attrib and float(d.attrib[attr]) > 0
+                            for attr in ["top", "left", "width", "height"]
+                        )
+                    )
+
+                if has_position_attrs(design_el):
                     source = "course.xml"
                     top_px = float(design_el.attrib.get("top", 0))
                     left_px = float(design_el.attrib.get("left", 0))
