@@ -83,7 +83,6 @@ class HTMLtoPPTX(HTMLParser):
             color = self.default_style["fontcolor"].lstrip("#")
             if len(color) == 6:
                 try:
-                try:
                     font.color.rgb = RGBColor.from_string(color.upper())
                 except ValueError:
                     pass
