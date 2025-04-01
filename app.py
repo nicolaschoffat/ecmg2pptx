@@ -296,6 +296,8 @@ if uploaded_file:
                     img_file = img_file.replace('@/','',1)
                 image_path = os.path.join(tmpdir, '_course', os.path.basename(img_file))
                 if os.path.exists(image_path):
+                else:
+                    st.warning(f"❌ Image non trouvée : {img_file} (chemin cherché : {image_path})")
                     try:
                         slide.shapes.add_picture(image_path, Inches(left), Inches(top), width=Inches(width), height=Inches(height))
                     except Exception as e:
