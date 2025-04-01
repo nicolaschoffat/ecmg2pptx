@@ -186,6 +186,7 @@ if uploaded_file:
                 color = title_style.get("fontcolor", "#000000").lstrip("#")
                 if len(color) == 6:
                     try:
+                        font.color.rgb = RGBColor.from_string(color.upper())
                     except ValueError:
                         pass
                 align = title_style.get("align", "left").lower()
