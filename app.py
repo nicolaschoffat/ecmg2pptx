@@ -79,8 +79,6 @@ def from_course(val, axis):
         corrected = float(val) + 10.917
         px = corrected / 152.838 * 700
             else:
-                p.alignment = PP_ALIGN.LEFT
-            run.text = title_text
         px = float(val) / 149.351 * 1150
     return px * 0.01043
 
