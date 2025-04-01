@@ -78,7 +78,7 @@ def from_course(val, axis):
     if axis == "y":
         corrected = float(val) + 10.917
         px = corrected / 152.838 * 700
-            else:
+    else:
         px = float(val) / 149.351 * 1150
     return px * 0.01043
 
