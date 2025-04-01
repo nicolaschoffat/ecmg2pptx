@@ -292,6 +292,8 @@ if uploaded_file:
                     width = from_look(width_px)
                     height = from_look(height_px)
 
+                if img_file.startswith('@/'):
+                    img_file = img_file.replace('@/','',1)
                 image_path = os.path.join(tmpdir, '_course', os.path.basename(img_file))
                 if os.path.exists(image_path):
                     try:
