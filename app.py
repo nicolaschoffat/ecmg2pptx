@@ -20,6 +20,88 @@ px_to_pt = {
     50: 38
 }
 
+st.set_page_config(page_title="ECMG to PowerPoint Converter")
+st.title("\U0001F4E4 Convertisseur ECMG vers PowerPoint")
+
+uploaded_file = st.file_uploader("Upload un module ECMG (zip SCORM)", type="zip")
+
+class HTMLtoPPTX(HTMLParser):
+    def __init__(self, text_frame, style=None):
+        super().__init__()
+        self.tf = text_frame
+        self.p = text_frame.paragraphs[0]
+        self.style = {"bold": False, "italic": False}
+        self.default_style = style or {}
+        self.run = self.p.add_run()
+        self.apply_style()
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        if tag == "b":
+            self.style["bold"] = True
+        elif tag == "i":
+            self.style["italic"] = True
+        elif tag == "font":
+            if "face" in attrs:
+                self.default_style["font"] = attrs["face"]
+            if "color" in attrs:
+                self.default_style["fontcolor"] = attrs["color"]
+            if "size" in attrs:
+                try:
+                    px = int(attrs["size"])
+                    self.default_style["fontsize"] = px
+                except:
+                    pass
+        self.run = self.p.add_run()
+        self.apply_style()
+
+    def handle_endtag(self, tag):
+        if tag == "b":
+            self.style["bold"] = False
+        elif tag == "i":
+            self.style["italic"] = False
+        elif tag == "font":
+            self.default_style.pop("font", None)
+            self.default_style.pop("fontcolor", None)
+            self.default_style.pop("fontsize", None)
+        self.run = self.p.add_run()
+        self.apply_style()
+
+    def handle_data(self, data):
+        self.run.text += data
+
+    def apply_style(self):
+        font = self.run.font
+        font.bold = self.style.get("bold", False)
+        font.italic = self.style.get("italic", False)
+        if "font" in self.default_style:
+            font.name = self.default_style["font"]
+        if "fontcolor" in self.default_style:
+            color = self.default_style["fontcolor"].lstrip("#")
+            if len(color) == 6:
+                try:
+                    font.color.rgb = RGBColor.from_string(color.upper())
+                except ValueError:
+                    pass
+        if "fontsize" in self.default_style:
+            try:
+                px = int(self.default_style["fontsize"])
+                pt = px_to_pt.get(px, int(px * 0.75))
+                font.size = Pt(pt)
+            except:
+                pass
+
+def from_course(val, axis):
+    if axis == "y":
+        corrected = float(val) + 10.917
+        px = corrected / 152.838 * 700
+    else:
+        px = float(val) / 149.351 * 1150
+    return px * 0.01043
+
+def from_look(val):
+    return float(val) * 0.01043
+
 for i, node in enumerate(nodes):
             title_el = node.find("./metadata/title")
             title_text = title_el.text.strip() if title_el is not None else "Sans titre"
