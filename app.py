@@ -177,6 +177,7 @@ if uploaded_file:
                 p.alignment = PP_ALIGN.RIGHT
             else:
                 p.alignment = PP_ALIGN.LEFT
+                p.alignment = PP_ALIGN.LEFT
             run.text = title_text
             run.text = title_text
             run.text = title_text
@@ -207,6 +208,7 @@ if uploaded_file:
             elif align == "right":
                 p.alignment = PP_ALIGN.RIGHT
             else:
+                p.alignment = PP_ALIGN.LEFT
             run.text = title_text
             font = run.font
             font.name = title_style.get("font", "Tahoma")
@@ -227,6 +229,7 @@ if uploaded_file:
             elif align == "right":
                 p.alignment = PP_ALIGN.RIGHT
             else:
+                p.alignment = PP_ALIGN.LEFT
             run.text = title_text
 
 
