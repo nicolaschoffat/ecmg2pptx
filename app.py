@@ -178,9 +178,7 @@ if uploaded_file:
                 p.alignment = PP_ALIGN.RIGHT
             else:
                 p.alignment = PP_ALIGN.LEFT
-            run.text = title_text
                 p.alignment = PP_ALIGN.LEFT
-            run.text = title_text
         # 🎨 Style appliqué au titre natif de la slide
         if title_style:
             title_shape = slide.shapes.title
@@ -210,8 +208,6 @@ if uploaded_file:
                 p.alignment = PP_ALIGN.RIGHT
             else:
                 p.alignment = PP_ALIGN.LEFT
-            run.text = title_text
-                p.alignment = PP_ALIGN.LEFT
             font = run.font
             font.name = title_style.get("font", "Tahoma")
             try:
@@ -231,8 +227,6 @@ if uploaded_file:
             elif align == "right":
                 p.alignment = PP_ALIGN.RIGHT
             else:
-                p.alignment = PP_ALIGN.LEFT
-            run.text = title_text
                 p.alignment = PP_ALIGN.LEFT
 
 
