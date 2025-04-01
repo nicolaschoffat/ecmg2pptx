@@ -301,24 +301,19 @@ if uploaded_file:
                     image_path = os.path.join(image_dir, os.path.basename(img_file))
                 st.text(f'🔍 Image path testé : {image_path}')
                 if os.path.exists(image_path):
-
+                    try:
                 # 🔍 Calcul du redimensionnement proportionnel
-                try:
                     with Image.open(image_path) as im:
                         img_width_px, img_height_px = im.size
-
                     # Conversion ECMG en pixels
                     target_width_px = width * 96  # 1 inch = 96 px
                     target_height_px = height * 96
-
                     # Calcul des échelles
                     scale_w = target_width_px / img_width_px
                     scale_h = target_height_px / img_height_px
                     scale = min(scale_w, scale_h)
-
                     final_width = img_width_px * scale
                     final_height = img_height_px * scale
-
                     slide.shapes.add_picture(
                         image_path,
                         Inches(left),
@@ -340,7 +335,6 @@ if uploaded_file:
                 text_id = el.attrib.get("id") or el.attrib.get("author_id")
                 style = style_map.get(text_id, {})
                 design_el = el.find("design")
-
                 def has_position_attrs(d):
                     return (
                         d is not None and any(
@@ -348,14 +342,12 @@ if uploaded_file:
                             for attr in ["top", "left", "width", "height"]
                         )
                     )
-
                 if has_position_attrs(design_el):
                     source = "course.xml"
                     top_px = float(design_el.attrib.get("top", 0))
                     left_px = float(design_el.attrib.get("left", 0))
                     width_px = float(design_el.attrib.get("width", 140))
                     height_px = float(design_el.attrib.get("height", 10))
-
                     top = from_course(top_px, "y")
                     left = from_course(left_px, "x")
                     width = from_course(width_px, "x")
@@ -366,19 +358,15 @@ if uploaded_file:
                     left_px = float(style.get("left", 0))
                     width_px = float(style.get("width", 140))
                     height_px = float(style.get("height", 10))
-
                     top = from_look(top_px)
                     left = from_look(left_px)
                     width = from_look(width_px)
                     height = from_look(height_px)
-
                     f"[{source}] Texte ID='{text_id}' → px: (l={left_px}, t={top_px}, w={width_px}, h={height_px}) | pouces: (l={left:.2f}, t={top:.2f}, w={width:.2f}, h={height:.2f})"
-
                 box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
                 tf = box.text_frame
                 tf.clear()
                 tf.word_wrap = True
-
                 alignment = style.get("align", "").lower()
                 if alignment == "center":
                     tf.paragraphs[0].alignment = PP_ALIGN.CENTER
@@ -386,7 +374,6 @@ if uploaded_file:
                     tf.paragraphs[0].alignment = PP_ALIGN.RIGHT
                 else:
                     tf.paragraphs[0].alignment = PP_ALIGN.LEFT
-
                 if "valign" in style:
                     valign = style.get("valign", "").lower()
                     if valign == "middle":
@@ -395,12 +382,9 @@ if uploaded_file:
                         tf.vertical_anchor = MSO_ANCHOR.BOTTOM
                     else:
                         tf.vertical_anchor = MSO_ANCHOR.TOP
-
                 parser = HTMLtoPPTX(tf, style)
                 parser.feed(content_el.text)
-
         output_path = os.path.join(tmpdir, "converted.pptx")
         prs.save(output_path)
-
         with open(output_path, "rb") as f:
             st.download_button("📅 Télécharger le PowerPoint", data=f, file_name="module_ecmg_converti.pptx")
