@@ -9,7 +9,6 @@ from pptx.util import Inches, Pt
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.dml.color import RGBColor
 from html.parser import HTMLParser
-from PIL import Image
 
 px_to_pt = {
     20: 15,
@@ -50,10 +49,11 @@ class HTMLtoPPTX(HTMLParser):
                 self.default_style["fontcolor"] = attrs["color"]
             if "size" in attrs:
                 try:
+                    px = int(attrs["size"])
                     self.default_style["fontsize"] = px
                 except:
                     pass
-        
+
         self.run = self.p.add_run()
         self.apply_style()
 
@@ -88,11 +88,12 @@ class HTMLtoPPTX(HTMLParser):
                     pass
         if "fontsize" in self.default_style:
             try:
+                px = int(self.default_style["fontsize"])
                 pt = px_to_pt.get(px, int(px * 0.75))
                 font.size = Pt(pt)
             except:
                 pass
-        
+
 def from_course(val, axis):
     if axis == "y":
         corrected = float(val) + 10.917
@@ -159,6 +160,7 @@ if uploaded_file:
             title_style = style_map.get("titre_activite")
             # 📐 Repositionnement/Redimensionnement de la zone de titre
             try:
+                top = from_look(float(title_style.get("top", 0)))
                 left = from_look(float(title_style.get("left", 0)))
                 width = from_look(float(title_style.get("width", 800)))
                 height = from_look(float(title_style.get("height", 50)))
@@ -178,6 +180,7 @@ if uploaded_file:
                 font = run.font
                 font.name = title_style.get("font", "Tahoma")
                 try:
+                    fontsize = int(title_style.get("fontsize", 22))
                     font.size = Pt(px_to_pt.get(fontsize, int(fontsize * 0.75)))
                 except:
                     font.size = Pt(16.5)
@@ -189,6 +192,7 @@ if uploaded_file:
                         font.color.rgb = RGBColor.from_string(color.upper())
                     except ValueError:
                         pass
+                align = title_style.get("align", "left").lower()
                 if align == "center":
                     p.alignment = PP_ALIGN.CENTER
                 elif align == "right":
@@ -260,7 +264,7 @@ if uploaded_file:
                 image_id = img_el.attrib.get("id") or img_el.attrib.get("author_id")
                 style = style_map.get(image_id, {})
                 design_el = img_el.find("design")
-        
+
                 def has_position_attrs(d):
                     return (
                         d is not None and any(
@@ -297,30 +301,10 @@ if uploaded_file:
                 st.text(f'🔍 Image path testé : {image_path}')
                 if os.path.exists(image_path):
                     try:
-                        st.text(f"🖼️ Image trouvée, ouverture : {image_path}")
-                        with Image.open(image_path) as im:
-                            img_width_px, img_height_px = im.size
-                            # Conversion ECMG en pixels
-                            target_width_px = width * 96  # 1 inch = 96 px
-                            target_height_px = height * 96
-                            
-                            # Calcul des échelles
-                            scale_w = target_width_px / img_width_px
-                            scale_h = target_height_px / img_height_px
-                            scale = min(scale_w, scale_h)
-                            final_width = img_width_px * scale
-                            final_height = img_height_px * scale
-                            slide.shapes.add_picture(
-                                image_path,
-                                Inches(left),
-                                Inches(top),
-                                width=Inches(final_width / 96),
-                                height=Inches(final_height / 96)
-                            )
-                        except Exception as e:
-                            st.warning(f"⚠️ Erreur ajout image avec ratio {img_file} : {e}")
-                            slide.shapes.add_picture(image_path, Inches(left), Inches(top), width=Inches(width), height=Inches(height))
-                    else:
+                        slide.shapes.add_picture(image_path, Inches(left), Inches(top), width=Inches(width), height=Inches(height))
+                    except Exception as e:
+                        st.warning(f"⚠️ Erreur ajout image {img_file} : {e}")
+                else:
                     st.warning(f"❌ Image non trouvée : {img_file}")
             for el in screen.findall("text"):
                 content_el = el.find("content")
@@ -329,6 +313,7 @@ if uploaded_file:
                 text_id = el.attrib.get("id") or el.attrib.get("author_id")
                 style = style_map.get(text_id, {})
                 design_el = el.find("design")
+
                 def has_position_attrs(d):
                     return (
                         d is not None and any(
@@ -336,12 +321,14 @@ if uploaded_file:
                             for attr in ["top", "left", "width", "height"]
                         )
                     )
+
                 if has_position_attrs(design_el):
                     source = "course.xml"
                     top_px = float(design_el.attrib.get("top", 0))
                     left_px = float(design_el.attrib.get("left", 0))
                     width_px = float(design_el.attrib.get("width", 140))
                     height_px = float(design_el.attrib.get("height", 10))
+
                     top = from_course(top_px, "y")
                     left = from_course(left_px, "x")
                     width = from_course(width_px, "x")
@@ -352,15 +339,19 @@ if uploaded_file:
                     left_px = float(style.get("left", 0))
                     width_px = float(style.get("width", 140))
                     height_px = float(style.get("height", 10))
+
                     top = from_look(top_px)
                     left = from_look(left_px)
                     width = from_look(width_px)
                     height = from_look(height_px)
+
                     f"[{source}] Texte ID='{text_id}' → px: (l={left_px}, t={top_px}, w={width_px}, h={height_px}) | pouces: (l={left:.2f}, t={top:.2f}, w={width:.2f}, h={height:.2f})"
+
                 box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
                 tf = box.text_frame
                 tf.clear()
                 tf.word_wrap = True
+
                 alignment = style.get("align", "").lower()
                 if alignment == "center":
                     tf.paragraphs[0].alignment = PP_ALIGN.CENTER
@@ -368,6 +359,7 @@ if uploaded_file:
                     tf.paragraphs[0].alignment = PP_ALIGN.RIGHT
                 else:
                     tf.paragraphs[0].alignment = PP_ALIGN.LEFT
+
                 if "valign" in style:
                     valign = style.get("valign", "").lower()
                     if valign == "middle":
@@ -376,9 +368,12 @@ if uploaded_file:
                         tf.vertical_anchor = MSO_ANCHOR.BOTTOM
                     else:
                         tf.vertical_anchor = MSO_ANCHOR.TOP
+
                 parser = HTMLtoPPTX(tf, style)
                 parser.feed(content_el.text)
+
         output_path = os.path.join(tmpdir, "converted.pptx")
         prs.save(output_path)
+
         with open(output_path, "rb") as f:
             st.download_button("📅 Télécharger le PowerPoint", data=f, file_name="module_ecmg_converti.pptx")
