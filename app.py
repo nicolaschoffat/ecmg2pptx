@@ -189,7 +189,6 @@ if uploaded_file:
                         font.color.rgb = RGBColor.from_string(color.upper())
                     except ValueError:
                         pass
-                align = title_style.get("align", "left").lower()
                 if align == "center":
                     p.alignment = PP_ALIGN.CENTER
                 elif align == "right":
@@ -298,8 +297,8 @@ if uploaded_file:
                 st.text(f'🔍 Image path testé : {image_path}')
                 if os.path.exists(image_path):
                     try:
-                    with Image.open(image_path) as im:
-                        img_width_px, img_height_px = im.size
+        with Image.open(image_path) as im:
+            img_width_px, img_height_px = im.size
                     # Conversion ECMG en pixels
                     target_width_px = width * 96  # 1 inch = 96 px
                     target_height_px = height * 96
