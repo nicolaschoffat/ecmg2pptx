@@ -301,7 +301,6 @@ if uploaded_file:
                 st.text(f'🔍 Image path testé : {image_path}')
                 if os.path.exists(image_path):
                     try:
-                        try:
                         with Image.open(image_path) as im:
                             orig_w, orig_h = im.size
                         ratio_w = width / orig_w
@@ -312,8 +311,6 @@ if uploaded_file:
                         slide.shapes.add_picture(image_path, Inches(left), Inches(top), width=Inches(final_w), height=Inches(final_h))
                     except Exception as e:
                         st.warning(f"⚠️ Erreur ajout image avec ratio {img_file} : {e}")
-                    except Exception as e:
-                        st.warning(f"⚠️ Erreur ajout image {img_file} : {e}")
                 else:
                     st.warning(f"❌ Image non trouvée : {img_file}")
             for el in screen.findall("text"):
