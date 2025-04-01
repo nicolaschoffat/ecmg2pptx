@@ -176,6 +176,7 @@ if uploaded_file:
             elif align == "right":
                 p.alignment = PP_ALIGN.RIGHT
             else:
+                 p.alignment = PP_ALIGN.LEFT
             run.text = title_text
         # 🎨 Style appliqué au titre natif de la slide
         if title_style:
