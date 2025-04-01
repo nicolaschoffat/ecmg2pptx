@@ -174,6 +174,7 @@ if uploaded_file:
             align = title_style.get("align", "left").lower()
             if align == "center":
                 p.alignment = PP_ALIGN.CENTER
+            run.text = title_text
             elif align == "right":
                 p.alignment = PP_ALIGN.RIGHT
             else:
@@ -204,6 +205,7 @@ if uploaded_file:
             align = title_style.get("align", "left").lower()
             if align == "center":
                 p.alignment = PP_ALIGN.CENTER
+            run.text = title_text
             elif align == "right":
                 p.alignment = PP_ALIGN.RIGHT
             else:
@@ -224,6 +226,7 @@ if uploaded_file:
             align = title_style.get("align", "").lower()
             if align == "center":
                 p.alignment = PP_ALIGN.CENTER
+            run.text = title_text
             elif align == "right":
                 p.alignment = PP_ALIGN.RIGHT
             else:
