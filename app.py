@@ -1,6 +1,5 @@
 import streamlit as st
 import zipfile
-from PIL import Image
 import tempfile
 import os
 from bs4 import BeautifulSoup
@@ -302,17 +301,16 @@ if uploaded_file:
                 st.text(f'🔍 Image path testé : {image_path}')
                 if os.path.exists(image_path):
                     try:
-                        try:
-                        with Image.open(image_path) as im:
-                            orig_w, orig_h = im.size
-                        ratio_w = width / orig_w
-                        ratio_h = height / orig_h
-                        scale = min(ratio_w, ratio_h)
-                        final_w = orig_w * scale
-                        final_h = orig_h * scale
-                        slide.shapes.add_picture(image_path, Inches(left), Inches(top), width=Inches(final_w), height=Inches(final_h))
-                    except Exception as e:
-                        st.warning(f"⚠️ Erreur ajout image avec ratio {img_file} : {e}")
+    with Image.open(image_path) as im:
+        orig_w, orig_h = im.size
+    ratio_w = width / orig_w
+    ratio_h = height / orig_h
+    scale = min(ratio_w, ratio_h)
+    final_w = orig_w * scale
+    final_h = orig_h * scale
+    slide.shapes.add_picture(image_path, Inches(left), Inches(top), width=Inches(final_w), height=Inches(final_h))
+except Exception as e:
+    st.warning(f"⚠️ Erreur ajout image avec ratio {img_file} : {e}")
                     except Exception as e:
                         st.warning(f"⚠️ Erreur ajout image {img_file} : {e}")
                 else:
