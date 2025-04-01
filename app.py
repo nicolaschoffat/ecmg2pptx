@@ -157,7 +157,6 @@ if uploaded_file:
             title_el = node.find("./metadata/title")
             title_text = title_el.text.strip() if title_el is not None else "Sans titre"
             slide = prs.slides.add_slide(prs.slide_layouts[5])
-            slide.shapes.title.text = title_text
             title_style = style_map.get("titre_activite")
             if title_style:
                 title_shape = slide.shapes.title
