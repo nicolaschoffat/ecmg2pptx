@@ -38,7 +38,6 @@ class HTMLtoPPTX(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
-
         if tag == "b":
             self.style["bold"] = True
         elif tag == "i":
@@ -54,7 +53,6 @@ class HTMLtoPPTX(HTMLParser):
                     self.default_style["fontsize"] = px
                 except:
                     pass
-
         self.run = self.p.add_run()
         self.apply_style()
 
@@ -77,7 +75,6 @@ class HTMLtoPPTX(HTMLParser):
         font = self.run.font
         font.bold = self.style.get("bold", False)
         font.italic = self.style.get("italic", False)
-
         if "font" in self.default_style:
             font.name = self.default_style["font"]
         if "fontcolor" in self.default_style:
@@ -106,51 +103,6 @@ def from_course(val, axis):
 def from_look(val):
     return float(val) * 0.01043
 
-if uploaded_file:
-    with tempfile.TemporaryDirectory() as tmpdir:
-        zip_path = os.path.join(tmpdir, "module.zip")
-        with open(zip_path, "wb") as f:
-            f.write(uploaded_file.read())
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-            zip_ref.extractall(tmpdir)
-
-        course_path, look_path, author_path = None, None, None
-        for root, dirs, files in os.walk(tmpdir):
-            if "course.xml" in files:
-                course_path = os.path.join(root, "course.xml")
-            if "look.xml" in files:
-                look_path = os.path.join(root, "look.xml")
-            if "author.xml" in files:
-                author_path = os.path.join(root, "author.xml")
-
-        if not course_path or not look_path or not author_path:
-            st.error("Fichiers course.xml, look.xml ou author.xml introuvables.")
-            st.stop()
-
-        tree = ET.parse(course_path)
-        root = tree.getroot()
-        nodes = root.findall(".//node")
-
-        look_tree = ET.parse(look_path)
-        look_root = look_tree.getroot()
-        style_map = {}
-        for el in look_root.findall(".//*[@id]"):
-            design = el.find("design")
-            if design is not None:
-                style_map[el.attrib["id"]] = design.attrib
-                if "author_id" in el.attrib:
-                    style_map[el.attrib["author_id"]] = design.attrib
-
-        author_tree = ET.parse(author_path)
-        author_root = author_tree.getroot()
-        author_map = {
-            el.attrib.get("id"): el.findtext("description")
-            for el in author_root.findall(".//item")
-        }
-
-        prs = Presentation()
-        prs.slide_width = Inches(12)
-        prs.slide_height = Inches(7.3)
 
         for i, node in enumerate(nodes):
             title_el = node.find("./metadata/title")
