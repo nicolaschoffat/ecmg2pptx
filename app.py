@@ -158,6 +158,19 @@ if uploaded_file:
             title_text = title_el.text.strip() if title_el is not None else "Sans titre"
             slide = prs.slides.add_slide(prs.slide_layouts[5])
             title_style = style_map.get("titre_activite")
+            # 📐 Repositionnement/Redimensionnement de la zone de titre
+            try:
+                top = from_look(float(title_style.get("top", 0)))
+                left = from_look(float(title_style.get("left", 0)))
+                width = from_look(float(title_style.get("width", 800)))
+                height = from_look(float(title_style.get("height", 50)))
+                title_shape = slide.shapes.title
+                title_shape.left = Inches(left)
+                title_shape.top = Inches(top)
+                title_shape.width = Inches(width)
+                title_shape.height = Inches(height)
+            except Exception as e:
+                st.warning(f"❗ Erreur redimension titre: {e}")
             if title_style:
                 title_shape = slide.shapes.title
                 tf = title_shape.text_frame
