@@ -10,6 +10,73 @@ from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.dml.color import RGBColor
 from html.parser import HTMLParser
 
+class HTMLtoPPTX(HTMLParser):
+    def __init__(self, text_frame, style=None):
+        super().__init__()
+        self.tf = text_frame
+        self.p = text_frame.paragraphs[0]
+        self.style = {"bold": False, "italic": False}
+        self.default_style = style or {}
+        self.run = self.p.add_run()
+        self.apply_style()
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        if tag == "b":
+            self.style["bold"] = True
+        elif tag == "i":
+            self.style["italic"] = True
+        elif tag == "font":
+            if "face" in attrs:
+                self.default_style["font"] = attrs["face"]
+            if "color" in attrs:
+                self.default_style["fontcolor"] = attrs["color"]
+            if "size" in attrs:
+                try:
+                    px = int(attrs["size"])
+                    self.default_style["fontsize"] = px
+                except:
+                    pass
+        self.run = self.p.add_run()
+        self.apply_style()
+
+    def handle_endtag(self, tag):
+        if tag == "b":
+            self.style["bold"] = False
+        elif tag == "i":
+            self.style["italic"] = False
+        elif tag == "font":
+            self.default_style.pop("font", None)
+            self.default_style.pop("fontcolor", None)
+            self.default_style.pop("fontsize", None)
+        self.run = self.p.add_run()
+        self.apply_style()
+
+    def handle_data(self, data):
+        self.run.text += data
+
+    def apply_style(self):
+        font = self.run.font
+        font.bold = self.style.get("bold", False)
+        font.italic = self.style.get("italic", False)
+        if "font" in self.default_style:
+            font.name = self.default_style["font"]
+        if "fontcolor" in self.default_style:
+            color = self.default_style["fontcolor"].lstrip("#")
+            if len(color) == 6:
+                try:
+                    font.color.rgb = RGBColor.from_string(color.upper())
+                except ValueError:
+                    pass
+        if "fontsize" in self.default_style:
+            try:
+                px = int(self.default_style["fontsize"])
+                pt = px_to_pt.get(px, int(px * 0.75))
+                font.size = Pt(pt)
+            except:
+                pass
+
+
 px_to_pt = {
     20: 15,
     25: 18,
