@@ -1,4 +1,3 @@
-
 import streamlit as st
 import zipfile
 import tempfile
@@ -256,6 +255,51 @@ if uploaded_file:
                         feedback_texts.append(soup.get_text(separator="\n"))
                 if feedback_texts:
                     notes.text += "\n---\n" + "\n---\n".join(feedback_texts)
+            # 🖼️ Images dans le screen
+            for img_el in screen.findall("image"):
+                content = img_el.find("content")
+                if content is None or not content.attrib.get("file"):
+                    continue
+                img_file = content.attrib["file"]
+                image_id = img_el.attrib.get("id") or img_el.attrib.get("author_id")
+                style = style_map.get(image_id, {})
+                design_el = img_el.find("design")
+
+                def has_position_attrs(d):
+                    return (
+                        d is not None and any(
+                            attr in d.attrib and float(d.attrib[attr]) > 0
+                            for attr in ["top", "left", "width", "height"]
+                        )
+                    )
+
+                if has_position_attrs(design_el):
+                    top_px = float(design_el.attrib.get("top", 0))
+                    left_px = float(design_el.attrib.get("left", 0))
+                    width_px = float(design_el.attrib.get("width", 200))
+                    height_px = float(design_el.attrib.get("height", 200))
+                    top = from_course(top_px, "y")
+                    left = from_course(left_px, "x")
+                    width = from_course(width_px, "x")
+                    height = from_course(height_px, "y")
+                else:
+                    top_px = float(style.get("top", 0))
+                    left_px = float(style.get("left", 0))
+                    width_px = float(style.get("width", 200))
+                    height_px = float(style.get("height", 200))
+                    top = from_look(top_px)
+                    left = from_look(left_px)
+                    width = from_look(width_px)
+                    height = from_look(height_px)
+
+                image_path = os.path.join(tmpdir, img_file)
+                if os.path.exists(image_path):
+                    try:
+                        slide.shapes.add_picture(image_path, Inches(left), Inches(top), width=Inches(width), height=Inches(height))
+                    except Exception as e:
+                        st.warning(f"⚠️ Erreur ajout image {img_file} : {e}")
+                else:
+                    st.warning(f"❌ Image non trouvée : {img_file}")
             for el in screen.findall("text"):
                 content_el = el.find("content")
                 if content_el is None or not content_el.text:
