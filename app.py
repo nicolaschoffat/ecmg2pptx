@@ -169,7 +169,6 @@ if uploaded_file:
                 title_shape.top = Inches(top)
                 title_shape.width = Inches(width)
                 title_shape.height = Inches(height)
-            except Exception as e:
                 st.warning(f"❗ Erreur redimension titre: {e}")
             if title_style:
                 title_shape = slide.shapes.title
@@ -302,11 +301,11 @@ if uploaded_file:
                         st.warning(f"⚠️ Erreur ajout image {img_file} : {e}")
                 else:
                     st.warning(f"❌ Image non trouvée : {img_file} (chemin cherché : {image_path})")
+                    try:
+                else:
+                    st.warning(f"❌ Image non trouvée : {img_file} (chemin cherché : {image_path})")
                     st.warning(f"❌ Image non trouvée : {img_file} (chemin cherché : {image_path})")
                     try:
-                        slide.shapes.add_picture(image_path, Inches(left), Inches(top), width=Inches(width), height=Inches(height))
-                    except Exception as e:
-                        st.warning(f"⚠️ Erreur ajout image {img_file} : {e}")
                 else:
                     st.warning(f"❌ Image non trouvée : {img_file}")
             for el in screen.findall("text"):
