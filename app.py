@@ -205,6 +205,7 @@ if uploaded_file:
             elif align == "right":
                 p.alignment = PP_ALIGN.RIGHT
             else:
+                p.alignment = PP_ALIGN.LEFT
             font = run.font
             font.name = title_style.get("font", "Tahoma")
             try:
