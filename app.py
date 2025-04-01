@@ -54,7 +54,7 @@ class HTMLtoPPTX(HTMLParser):
                     self.default_style["fontsize"] = px
                 except:
                     pass
-
+        
         self.run = self.p.add_run()
         self.apply_style()
 
@@ -94,7 +94,7 @@ class HTMLtoPPTX(HTMLParser):
                 font.size = Pt(pt)
             except:
                 pass
-
+        
 def from_course(val, axis):
     if axis == "y":
         corrected = float(val) + 10.917
@@ -265,7 +265,7 @@ if uploaded_file:
                 image_id = img_el.attrib.get("id") or img_el.attrib.get("author_id")
                 style = style_map.get(image_id, {})
                 design_el = img_el.find("design")
-
+        
                 def has_position_attrs(d):
                     return (
                         d is not None and any(
