@@ -153,7 +153,6 @@ if uploaded_file:
         if title_style:
             title_shape = slide.shapes.title
             tf = title_shape.text_frame
-            tf.clear()
             p = tf.paragraphs[0]
             run = p.add_run()
             font = run.font
@@ -180,11 +179,11 @@ if uploaded_file:
                 p.alignment = PP_ALIGN.LEFT
             run.text = title_text
             run.text = title_text
+            run.text = title_text
         # 🎨 Style appliqué au titre natif de la slide
         if title_style:
             title_shape = slide.shapes.title
             tf = title_shape.text_frame
-            tf.clear()
             p = tf.paragraphs[0]
             run = p.add_run()
             font = run.font
