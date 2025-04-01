@@ -293,8 +293,11 @@ if uploaded_file:
                     height = from_look(height_px)
 
                 image_dir = os.path.dirname(course_path)
+                image_dir = os.path.dirname(course_path)
                 image_path = os.path.join(image_dir, os.path.basename(img_file))
-                st.text(f'🔍 Image path testé : {image_path}')
+                if not os.path.exists(image_path):
+                    image_dir = os.path.dirname(look_path)
+                    image_path = os.path.join(image_dir, os.path.basename(img_file))
                 st.text(f'🔍 Image path testé : {image_path}')
                 if os.path.exists(image_path):
                     try:
@@ -342,7 +345,6 @@ if uploaded_file:
                     width = from_look(width_px)
                     height = from_look(height_px)
 
-                st.text(
                     f"[{source}] Texte ID='{text_id}' → px: (l={left_px}, t={top_px}, w={width_px}, h={height_px}) | pouces: (l={left:.2f}, t={top:.2f}, w={width:.2f}, h={height:.2f})"
                 )
 
