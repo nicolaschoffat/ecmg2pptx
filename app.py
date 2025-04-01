@@ -78,7 +78,9 @@ def from_course(val, axis):
     if axis == "y":
         corrected = float(val) + 10.917
         px = corrected / 152.838 * 700
-    else:
+            else:
+                p.alignment = PP_ALIGN.LEFT
+            run.text = title_text
         px = float(val) / 149.351 * 1150
     return px * 0.01043
 
@@ -176,7 +178,7 @@ if uploaded_file:
             elif align == "right":
                 p.alignment = PP_ALIGN.RIGHT
             else:
-            run.text = title_text
+                p.alignment = PP_ALIGN.LEFT
         # 🎨 Style appliqué au titre natif de la slide
         if title_style:
             title_shape = slide.shapes.title
