@@ -104,16 +104,16 @@ def from_look(val):
     return float(val) * 0.01043
 
 
-        for i, node in enumerate(nodes):
-            title_el = node.find("./metadata/title")
-            title_text = title_el.text.strip() if title_el is not None else "Sans titre"
-            slide = prs.slides.add_slide(prs.slide_layouts[5])
-            slide.shapes.title.text = title_text
-            page = node.find(".//page")
-            screen = page.find("screen") if page is not None else None
-            if not screen:
-                continue
-            y = 1.5
+    for i, node in enumerate(nodes):
+        title_el = node.find("./metadata/title")
+        title_text = title_el.text.strip() if title_el is not None else "Sans titre"
+        slide = prs.slides.add_slide(prs.slide_layouts[5])
+        slide.shapes.title.text = title_text
+        page = node.find(".//page")
+        screen = page.find("screen") if page is not None else None
+        if not screen:
+            continue
+        y = 1.5
 
             # ➕ Zone de texte stylée depuis titre_activite de look.xml
             title_style = style_map.get("titre_activite")
