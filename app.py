@@ -79,6 +79,7 @@ def from_course(val, axis):
         corrected = float(val) + 10.917
         px = corrected / 152.838 * 700
     else:
+                p.alignment = PP_ALIGN.LEFT
         px = float(val) / 149.351 * 1150
     return px * 0.01043
 
@@ -177,6 +178,7 @@ if uploaded_file:
                 p.alignment = PP_ALIGN.RIGHT
             else:
                 p.alignment = PP_ALIGN.LEFT
+                p.alignment = PP_ALIGN.LEFT
             run.text = title_text
         # 🎨 Style appliqué au titre natif de la slide
         if title_style:
@@ -205,6 +207,7 @@ if uploaded_file:
             elif align == "right":
                 p.alignment = PP_ALIGN.RIGHT
             else:
+                p.alignment = PP_ALIGN.LEFT
             font = run.font
             font.name = title_style.get("font", "Tahoma")
             try:
@@ -224,6 +227,7 @@ if uploaded_file:
             elif align == "right":
                 p.alignment = PP_ALIGN.RIGHT
             else:
+                p.alignment = PP_ALIGN.LEFT
 
 
         output_path = os.path.join(tmpdir, "converted.pptx")
