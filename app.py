@@ -148,6 +148,37 @@ if uploaded_file:
             title_text = title_el.text.strip() if title_el is not None else f"Slide {i+1}"
             st.text(f"➡️ Slide {i+1}: {title_text}")
             slide = prs.slides.add_slide(prs.slide_layouts[5])
+        slide.shapes.title.text = title_text
+        # 🎨 Style appliqué au titre natif de la slide
+        if title_style:
+            title_shape = slide.shapes.title
+            tf = title_shape.text_frame
+            tf.clear()
+            p = tf.paragraphs[0]
+            run = p.add_run()
+            font = run.font
+            font.name = title_style.get("font", "Tahoma")
+            try:
+                fontsize = int(title_style.get("fontsize", 22))
+                font.size = Pt(px_to_pt.get(fontsize, fontsize * 0.75))
+            except:
+                font.size = Pt(16.5)
+            font.bold = title_style.get("bold", "0") == "1"
+            font.italic = title_style.get("italic", "0") == "1"
+            color = title_style.get("fontcolor", "#000000").lstrip("#")
+            if len(color) == 6:
+                try:
+                    font.color.rgb = RGBColor.from_string(color.upper())
+                except ValueError:
+                    pass
+            align = title_style.get("align", "left").lower()
+            if align == "center":
+                p.alignment = PP_ALIGN.CENTER
+            elif align == "right":
+                p.alignment = PP_ALIGN.RIGHT
+            else:
+                p.alignment = PP_ALIGN.LEFT
+            run.text = title_text
         if title_style:
             top = from_look(float(title_style.get("top", 20)))
             left = from_look(float(title_style.get("left", 10)))
