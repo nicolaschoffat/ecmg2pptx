@@ -178,43 +178,6 @@ if uploaded_file:
                 p.alignment = PP_ALIGN.RIGHT
             else:
                 p.alignment = PP_ALIGN.LEFT
-            run.text = title_text
-        if title_style:
-            top = from_look(float(title_style.get("top", 20)))
-            left = from_look(float(title_style.get("left", 10)))
-            width = from_look(float(title_style.get("width", 800)))
-            height = from_look(float(title_style.get("height", 50)))
-            box = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
-            tf = box.text_frame
-            tf.clear()
-            tf.word_wrap = True
-            p = tf.paragraphs[0]
-            p.clear()
-            run = p.add_run()
-            font = run.font
-            font.name = title_style.get("font", "Tahoma")
-            try:
-                fontsize = int(title_style.get("fontsize", 22))
-                font.size = Pt(px_to_pt.get(fontsize, fontsize * 0.75))
-            except:
-                font.size = Pt(16.5)
-            font.bold = title_style.get("bold", "0") == "1"
-            font.italic = title_style.get("italic", "0") == "1"
-            color = title_style.get("fontcolor", "#000000").lstrip("#")
-            if len(color) == 6:
-                try:
-                    font.color.rgb = RGBColor.from_string(color.upper())
-                except ValueError:
-                    pass
-            align = title_style.get("align", "left").lower()
-            if align == "center":
-                p.alignment = PP_ALIGN.CENTER
-            elif align == "right":
-                p.alignment = PP_ALIGN.RIGHT
-            else:
-                p.alignment = PP_ALIGN.LEFT
-            run.text = title_text
-
             font = run.font
             font.name = title_style.get("font", "Tahoma")
             try:
