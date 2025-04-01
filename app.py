@@ -292,7 +292,9 @@ if uploaded_file:
                     width = from_look(width_px)
                     height = from_look(height_px)
 
-                image_path = os.path.join(tmpdir, '_course', os.path.basename(img_file))
+                image_dir = os.path.dirname(course_path)
+                image_path = os.path.join(image_dir, os.path.basename(img_file))
+                st.text(f'🔍 Image path testé : {image_path}')
                 st.text(f'🔍 Image path testé : {image_path}')
                 if os.path.exists(image_path):
                     try:
