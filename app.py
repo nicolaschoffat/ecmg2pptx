@@ -297,24 +297,24 @@ if uploaded_file:
                 st.text(f'🔍 Image path testé : {image_path}')
                 if os.path.exists(image_path):
                     try:
-                        with Image.open(image_path) as im:
-                            img_width_px, img_height_px = im.size
-                                    # Conversion ECMG en pixels
-                                    target_width_px = width * 96  # 1 inch = 96 px
-                                    target_height_px = height * 96
-                                    # Calcul des échelles
-                                    scale_w = target_width_px / img_width_px
-                                    scale_h = target_height_px / img_height_px
-                                    scale = min(scale_w, scale_h)
-                                    final_width = img_width_px * scale
-                                    final_height = img_height_px * scale
-                                    slide.shapes.add_picture(
-                                        image_path,
-                                        Inches(left),
-                                        Inches(top),
-                                        width=Inches(final_width / 96),
-                                        height=Inches(final_height / 96)
-                    )
+                    with Image.open(image_path) as im:
+                        img_width_px, img_height_px = im.size
+                                # Conversion ECMG en pixels
+                                target_width_px = width * 96  # 1 inch = 96 px
+                                target_height_px = height * 96
+                                # Calcul des échelles
+                                scale_w = target_width_px / img_width_px
+                                scale_h = target_height_px / img_height_px
+                                scale = min(scale_w, scale_h)
+                                final_width = img_width_px * scale
+                                final_height = img_height_px * scale
+                                slide.shapes.add_picture(
+                                    image_path,
+                                    Inches(left),
+                                    Inches(top),
+                                    width=Inches(final_width / 96),
+                                    height=Inches(final_height / 96)
+                                    )
                 except Exception as e:
                     st.warning(f"⚠️ Erreur ajout image avec ratio {img_file} : {e}")
                         slide.shapes.add_picture(image_path, Inches(left), Inches(top), width=Inches(width), height=Inches(height))
