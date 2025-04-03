@@ -428,9 +428,11 @@ if uploaded_file:
                 p.alignment = PP_ALIGN.LEFT
 
             page = node.find(".//page")
-            screen = page.find("screen") if page is not None else None
-            if not screen:
-                continue
+            screen = page.find("screen")
+            if page is not None
+            else None
+                if not screen:
+                    continue
 
             # ✅ Ajout des consignes au début du traitement de l'écran
             add_consigne_boxes(screen, slide, style_map)
