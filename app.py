@@ -236,7 +236,7 @@ if uploaded_file:
 
         for i, node in enumerate(nodes):
             title_el = node.find("./metadata/title")
-            title_text = title_el.text.strip() if title_el is not None else "Sans titre"
+            title_text = title_el.text.strip() if title_el is not None and title_el.text else "Sans titre"
             slide = prs.slides.add_slide(prs.slide_layouts[5])
             title_style = style_map.get("titre_activite")
             # 📐 Repositionnement/Redimensionnement de la zone de titre
