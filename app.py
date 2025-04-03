@@ -172,7 +172,7 @@ def add_consigne_boxes(screen, slide, style_map):
 
 # 🔧 Ajout fonction pour traiter les fichiers externes (PDF)
 def add_external_links(screen, slide):
-    for action in screen.findall("action"):
+    for action in screen.iter("action"):
         if action.attrib.get("action") == "open":
             param = action.attrib.get("param", "")
             if param.endswith(".pdf") and param.startswith("@/"):
