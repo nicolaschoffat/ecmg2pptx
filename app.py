@@ -246,6 +246,69 @@ if uploaded_file:
             title_el = node.find("./metadata/title")
             title_text = title_el.text.strip() if title_el is not None and title_el.text else "Sans titre"
             slide = prs.slides.add_slide(prs.slide_layouts[5])
+
+            # 🔁 Injecter des éléments de look.xml spécifiques à certaines pages
+            look_elements_by_page = {
+                "page_intro": ["cadre_intro", "title_UA_intro"]
+            }
+            
+            page_id = node.attrib.get("id")
+            if page_id in look_elements_by_page:
+                for el_id in look_elements_by_page[page_id]:
+                    look_el = look_root.find(f".//*[@id='{el_id}']")
+                    if look_el is not None:
+                        tag = look_el.tag
+                        style = style_map.get(el_id, {})
+                        design_el = look_el.find("design")
+                        content_el = look_el.find("content")
+            
+                        def has_position_attrs(d):
+                            return d is not None and any(attr in d.attrib and float(d.attrib[attr]) > 0 for attr in ["top", "left", "width", "height"])
+            
+                        if has_position_attrs(design_el):
+                            top_px = float(design_el.attrib.get("top", 0))
+                            left_px = float(design_el.attrib.get("left", 0))
+                            width_px = float(design_el.attrib.get("width", 140))
+                            height_px = float(design_el.attrib.get("height", 10))
+                            top = from_look(top_px)
+                            left = from_look(left_px)
+                            width = from_look(width_px)
+                            height = from_look(height_px)
+            
+                            if tag == "image" and content_el is not None and content_el.attrib.get("file"):
+                                image_path = os.path.join(os.path.dirname(look_path), content_el.attrib["file"])
+                                if os.path.exists(image_path):
+                                    with Image.open(image_path) as im:
+                                        orig_width_px, orig_height_px = im.size
+                                    orig_ratio = orig_width_px / orig_height_px
+                                    target_ratio = width / height
+                                    if orig_ratio > target_ratio:
+                                        draw_width = width
+                                        draw_height = width / orig_ratio
+                                        offset_left = 0
+                                        offset_top = (height - draw_height) / 2
+                                    else:
+                                        draw_height = height
+                                        draw_width = height * orig_ratio
+                                        offset_top = 0
+                                        offset_left = (width - draw_width) / 2
+                                    slide.shapes.add_picture(
+                                        image_path,
+                                        Inches(left + offset_left + 0.1),
+                                        Inches(top + offset_top + 0.1),
+                                        width=Inches(draw_width),
+                                        height=Inches(draw_height)
+                                    )
+                            elif tag in ["text", "title"]:
+                                box = slide.shapes.add_textbox(Inches(left + 0.1), Inches(top + 0.1), Inches(width), Inches(height))
+                                tf = box.text_frame
+                                tf.clear()
+                                tf.word_wrap = True
+                                parser = HTMLtoPPTX(tf, style)
+                                if content_el is None or not content_el.text:
+                                    parser.feed(ua_title)
+                                else:
+                                    parser.feed(content_el.text)
             
             title_style = style_map.get("titre_activite")
             title_shape = slide.shapes.title
