@@ -496,7 +496,7 @@ if uploaded_file:
                         except Exception as e:
                             st.warning(f"⚠️ Erreur ajout image {img_file} : {e}")
             
-                elif tag == "text" or tag == "consigne":
+                elif tag == "text":
                     content_el = el.find("content")
                     if content_el is None or not content_el.text:
                         continue
