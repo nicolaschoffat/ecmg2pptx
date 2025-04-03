@@ -247,7 +247,7 @@ if uploaded_file:
             title_text = title_el.text.strip() if title_el is not None and title_el.text else "Sans titre"
             slide = prs.slides.add_slide(prs.slide_layouts[5])
 
-        # 🔁 Injection d'éléments spécifiques depuis look.xml si la page le demande
+        # 🔁 Injection d'éléments de look.xml spécifiques à certaines pages
         look_elements_by_page = {
             "page_intro": ["cadre_intro", "title_UA_intro"]
         }
@@ -309,7 +309,7 @@ if uploaded_file:
                                 parser.feed(ua_title)
                             else:
                                 parser.feed(content_el.text)
-
+        
             # 🔁 Injecter des éléments de look.xml spécifiques à certaines pages
             look_elements_by_page = {
                 "page_intro": ["cadre_intro", "title_UA_intro"]
