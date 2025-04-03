@@ -105,6 +105,10 @@ def from_course(val, axis):
 def from_look(val):
     return float(val) * 0.01043
 
+# 🔧 Correction appliquée ici : score > 0 considéré comme bonne réponse
+# Remplacer cette ligne : label = "✅" if score == "100" else "⬜"
+# Par : label = "✅" if int(score) > 0 else "⬜"
+
 # Le reste du code sera complété après ajout du style de titre
 
 if uploaded_file:
