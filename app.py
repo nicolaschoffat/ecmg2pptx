@@ -238,48 +238,56 @@ if uploaded_file:
             title_el = node.find("./metadata/title")
             title_text = title_el.text.strip() if title_el is not None and title_el.text else "Sans titre"
             slide = prs.slides.add_slide(prs.slide_layouts[5])
+            
             title_style = style_map.get("titre_activite")
-            # 📐 Repositionnement/Redimensionnement de la zone de titre
-            try:
-                top = from_look(float(title_style.get("top", 0)))
-                left = from_look(float(title_style.get("left", 0)))
-                width = from_look(float(title_style.get("width", 800)))
-                height = from_look(float(title_style.get("height", 50)))
-                title_shape = slide.shapes.title
-                title_shape.left = Inches(left + 0.1)
-                title_shape.top = Inches(top + 0.1)
-                title_shape.width = Inches(width)
-                title_shape.height = Inches(height)
-            except Exception as e:
-                st.warning(f"❗ Erreur redimension titre: {e}")
+            title_shape = slide.shapes.title
+            
             if title_style:
-                title_shape = slide.shapes.title
-                tf = title_shape.text_frame
-                p = tf.paragraphs[0]
-                run = p.add_run()
-                run.text = title_text
-                font = run.font
-                font.name = title_style.get("font", "Tahoma")
                 try:
-                    fontsize = int(title_style.get("fontsize", 22))
-                    font.size = Pt(px_to_pt.get(fontsize, int(fontsize * 0.75)))
-                except:
-                    font.size = Pt(16.5)
-                font.bold = title_style.get("bold", "0") == "1"
-                font.italic = title_style.get("italic", "0") == "1"
-                color = title_style.get("fontcolor", "#000000").lstrip("#")
-                if len(color) == 6:
-                    try:
-                        font.color.rgb = RGBColor.from_string(color.upper())
-                    except ValueError:
-                        pass
-                align = title_style.get("align", "left").lower()
-                if align == "center":
-                    p.alignment = PP_ALIGN.CENTER
-                elif align == "right":
-                    p.alignment = PP_ALIGN.RIGHT
-                else:
-                    p.alignment = PP_ALIGN.LEFT
+                    top = from_look(float(title_style.get("top", 0)))
+                    left = from_look(float(title_style.get("left", 0)))
+                    width = from_look(float(title_style.get("width", 800)))
+                    height = from_look(float(title_style.get("height", 50)))
+            
+                    title_shape.left = Inches(left + 0.1)
+                    title_shape.top = Inches(top + 0.1)
+                    title_shape.width = Inches(width)
+                    title_shape.height = Inches(height)
+                except Exception as e:
+                    st.warning(f"❗ Erreur redimension titre: {e}")
+            
+            tf = title_shape.text_frame
+            tf.clear()
+            p = tf.paragraphs[0]
+            run = p.add_run()
+            run.text = title_text
+            
+            font = run.font
+            font.name = title_style.get("font", "Tahoma") if title_style else "Tahoma"
+            try:
+                fontsize = int(title_style.get("fontsize", 22)) if title_style else 22
+                font.size = Pt(px_to_pt.get(fontsize, int(fontsize * 0.75)))
+            except:
+                font.size = Pt(16.5)
+            
+            font.bold = title_style.get("bold", "0") == "1" if title_style else False
+            font.italic = title_style.get("italic", "0") == "1" if title_style else False
+            
+            color = title_style.get("fontcolor", "#000000").lstrip("#") if title_style else "000000"
+            if len(color) == 6:
+                try:
+                    font.color.rgb = RGBColor.from_string(color.upper())
+                except ValueError:
+                    pass
+            
+            align = title_style.get("align", "left").lower() if title_style else "left"
+            if align == "center":
+                p.alignment = PP_ALIGN.CENTER
+            elif align == "right":
+                p.alignment = PP_ALIGN.RIGHT
+            else:
+                p.alignment = PP_ALIGN.LEFT
+
             page = node.find(".//page")
             screen = page.find("screen") if page is not None else None
             if not screen:
