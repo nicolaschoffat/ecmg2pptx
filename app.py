@@ -298,7 +298,6 @@ if uploaded_file:
                 if not os.path.exists(image_path):
                     image_dir = os.path.dirname(look_path)
                     image_path = os.path.join(image_dir, os.path.basename(img_file))
-                st.text(f'🔍 Image path testé : {image_path}')
                 if os.path.exists(image_path):
                     try:
                         slide.shapes.add_picture(image_path, Inches(left + 0.1), Inches(top + 0.1), width=Inches(width), height=Inches(height))
@@ -344,8 +343,6 @@ if uploaded_file:
                     left = from_look(left_px)
                     width = from_look(width_px)
                     height = from_look(height_px)
-
-                    f"[{source}] Texte ID='{text_id}' → px: (l={left_px}, t={top_px}, w={width_px}, h={height_px}) | pouces: (l={left:.2f}, t={top:.2f}, w={width:.2f}, h={height:.2f})"
 
                 box = slide.shapes.add_textbox(Inches(left + 0.1), Inches(top + 0.1), Inches(width), Inches(height))
                 tf = box.text_frame
