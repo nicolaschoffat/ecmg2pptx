@@ -9,6 +9,7 @@ from pptx.util import Inches, Pt
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.dml.color import RGBColor
 from html.parser import HTMLParser
+from PIL import Image
 
 px_to_pt = {
     20: 15,
@@ -387,7 +388,32 @@ if uploaded_file:
                     image_path = os.path.join(image_dir, os.path.basename(img_file))
                 if os.path.exists(image_path):
                     try:
-                        slide.shapes.add_picture(image_path, Inches(left + 0.1), Inches(top + 0.1), width=Inches(width), height=Inches(height))
+                        from PIL import Image
+
+with Image.open(image_path) as im:
+    orig_width_px, orig_height_px = im.size
+orig_ratio = orig_width_px / orig_height_px
+target_ratio = width / height
+
+if orig_ratio > target_ratio:
+    draw_width = width
+    draw_height = width / orig_ratio
+    offset_left = 0
+    offset_top = (height - draw_height) / 2
+else:
+    draw_height = height
+    draw_width = height * orig_ratio
+    offset_top = 0
+    offset_left = (width - draw_width) / 2
+
+slide.shapes.add_picture(
+    image_path,
+    Inches(left + offset_left + 0.1),
+    Inches(top + offset_top + 0.1),
+    width=Inches(draw_width),
+    height=Inches(draw_height)
+)
+
                     except Exception as e:
                         st.warning(f"⚠️ Erreur ajout image {img_file} : {e}")
                 else:
