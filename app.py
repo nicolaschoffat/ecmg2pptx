@@ -213,6 +213,14 @@ if uploaded_file:
         root = tree.getroot()
         nodes = root.findall(".//node")
 
+        # Lecture du titre global de l'UA (Unité d'Apprentissage)
+        ua_title = "[Titre UA manquant]"
+        metadata = root.find("./metadata")
+        if metadata is not None:
+            global_title_el = metadata.find("title")
+            if global_title_el is not None and global_title_el.text:
+                ua_title = global_title_el.text.strip()
+        
         look_tree = ET.parse(look_path)
         look_root = look_tree.getroot()
         style_map = {}
@@ -484,7 +492,10 @@ if uploaded_file:
                             tf.vertical_anchor = MSO_ANCHOR.TOP
             
                     parser = HTMLtoPPTX(tf, style)
-                    parser.feed(content_el.text)
+                    if content_el is None or not content_el.text:
+                        parser.feed(ua_title)
+                    else:
+                        parser.feed(content_el.text)
 
         output_path = os.path.join(tmpdir, "converted.pptx")
         prs.save(output_path)
