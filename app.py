@@ -247,7 +247,7 @@ if uploaded_file:
             title_text = title_el.text.strip() if title_el is not None and title_el.text else "Sans titre"
             slide = prs.slides.add_slide(prs.slide_layouts[5])
 
-        # 🔁 Injection d'éléments de look.xml spécifiques à certaines pages
+        # ✅ Injection d'éléments de look.xml spécifiques à certaines pages
         look_elements_by_page = {
             "page_intro": ["cadre_intro", "title_UA_intro"]
         }
@@ -263,7 +263,10 @@ if uploaded_file:
                     content_el = look_el.find("content")
 
                     def has_position_attrs(d):
-                        return d is not None and any(attr in d.attrib and float(d.attrib[attr]) > 0 for attr in ["top", "left", "width", "height"])
+                        return d is not None and any(
+                            attr in d.attrib and float(d.attrib[attr]) > 0
+                            for attr in ["top", "left", "width", "height"]
+                        )
 
                     if has_position_attrs(design_el):
                         top_px = float(design_el.attrib.get("top", 0))
@@ -278,6 +281,7 @@ if uploaded_file:
                         if tag == "image" and content_el is not None and content_el.attrib.get("file"):
                             image_path = os.path.join(os.path.dirname(look_path), content_el.attrib["file"])
                             if os.path.exists(image_path):
+                                from PIL import Image
                                 with Image.open(image_path) as im:
                                     orig_width_px, orig_height_px = im.size
                                 orig_ratio = orig_width_px / orig_height_px
@@ -305,6 +309,7 @@ if uploaded_file:
                             tf.clear()
                             tf.word_wrap = True
                             parser = HTMLtoPPTX(tf, style)
+                            # fallback si vide
                             if content_el is None or not content_el.text:
                                 parser.feed(ua_title)
                             else:
