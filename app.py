@@ -201,6 +201,10 @@ if uploaded_file:
             screen = page.find("screen") if page is not None else None
             if not screen:
                 continue
+
+            # ✅ Ajout des consignes au début du traitement de l'écran
+            add_consigne_boxes(screen, slide, style_map)
+            
             y = 1.5
             # 🎥 Vidéo (si présente)
             video_file = None
