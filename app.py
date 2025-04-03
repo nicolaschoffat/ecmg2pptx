@@ -344,143 +344,139 @@ if uploaded_file:
                 if feedback_texts:
                     notes.text += "\n---\n" + "\n---\n".join(feedback_texts)
             # 🖼️ Images dans le screen
-            for img_el in screen.findall("image"):
-                content = img_el.find("content")
-                if content is None or not content.attrib.get("file"):
-                    continue
-                img_file = content.attrib["file"]
-                image_id = img_el.attrib.get("id") or img_el.attrib.get("author_id")
-                style = style_map.get(image_id, {})
-                design_el = img_el.find("design")
-
-                def has_position_attrs(d):
-                    return (
-                        d is not None and any(
-                            attr in d.attrib and float(d.attrib[attr]) > 0
-                            for attr in ["top", "left", "width", "height"]
+            # ✅ Gestion de la profondeur en suivant l'ordre d'apparition dans le XML
+            for el in list(screen):
+                tag = el.tag
+            
+                if tag == "image":
+                    content = el.find("content")
+                    if content is None or not content.attrib.get("file"):
+                        continue
+                    img_file = content.attrib["file"]
+                    image_id = el.attrib.get("id") or el.attrib.get("author_id")
+                    style = style_map.get(image_id, {})
+                    design_el = el.find("design")
+            
+                    def has_position_attrs(d):
+                        return (
+                            d is not None and any(
+                                attr in d.attrib and float(d.attrib[attr]) > 0
+                                for attr in ["top", "left", "width", "height"]
+                            )
                         )
-                    )
-
-                if has_position_attrs(design_el):
-                    top_px = float(design_el.attrib.get("top", 0))
-                    left_px = float(design_el.attrib.get("left", 0))
-                    width_px = float(design_el.attrib.get("width", 200))
-                    height_px = float(design_el.attrib.get("height", 200))
-                    top = from_course(top_px, "y")
-                    left = from_course(left_px, "x")
-                    width = from_course(width_px, "x")
-                    height = from_course(height_px, "y")
-                else:
-                    top_px = float(style.get("top", 0))
-                    left_px = float(style.get("left", 0))
-                    width_px = float(style.get("width", 200))
-                    height_px = float(style.get("height", 200))
-                    top = from_look(top_px)
-                    left = from_look(left_px)
-                    width = from_look(width_px)
-                    height = from_look(height_px)
-
-                image_dir = os.path.dirname(course_path)
-                image_dir = os.path.dirname(course_path)
-                image_path = os.path.join(image_dir, os.path.basename(img_file))
-                if not os.path.exists(image_path):
-                    image_dir = os.path.dirname(look_path)
-                    image_path = os.path.join(image_dir, os.path.basename(img_file))
-                if not os.path.exists(image_path):
-                    image_dir = os.path.dirname(look_path)
-                    image_path = os.path.join(image_dir, os.path.basename(img_file))
-                if os.path.exists(image_path):
-                    try:
-                        with Image.open(image_path) as im:
-                            orig_width_px, orig_height_px = im.size
-                        orig_ratio = orig_width_px / orig_height_px
-                        target_ratio = width / height
-
-                        if orig_ratio > target_ratio:
-                            draw_width = width
-                            draw_height = width / orig_ratio
-                            offset_left = 0
-                            offset_top = (height - draw_height) / 2
-                        else:
-                            draw_height = height
-                            draw_width = height * orig_ratio
-                            offset_top = 0
-                            offset_left = (width - draw_width) / 2
-
-                        slide.shapes.add_picture(
-                            image_path,
-                            Inches(left + offset_left + 0.1),
-                            Inches(top + offset_top + 0.1),
-                            width=Inches(draw_width),
-                            height=Inches(draw_height)
-                        )
-                    except Exception as e:
-                        st.warning(f"⚠️ Erreur ajout image {img_file} : {e}")
-                else:
-                    st.warning(f"❌ Image non trouvée : {img_file}")
-            for el in screen.findall("text"):
-                content_el = el.find("content")
-                if content_el is None or not content_el.text:
-                    continue
-                text_id = el.attrib.get("id") or el.attrib.get("author_id")
-                style = style_map.get(text_id, {})
-                design_el = el.find("design")
-
-                def has_position_attrs(d):
-                    return (
-                        d is not None and any(
-                            attr in d.attrib and float(d.attrib[attr]) > 0
-                            for attr in ["top", "left", "width", "height"]
-                        )
-                    )
-
-                if has_position_attrs(design_el):
-                    source = "course.xml"
-                    top_px = float(design_el.attrib.get("top", 0))
-                    left_px = float(design_el.attrib.get("left", 0))
-                    width_px = float(design_el.attrib.get("width", 140))
-                    height_px = float(design_el.attrib.get("height", 10))
-
-                    top = from_course(top_px, "y")
-                    left = from_course(left_px, "x")
-                    width = from_course(width_px, "x")
-                    height = from_course(height_px, "y")
-                else:
-                    source = "look.xml"
-                    top_px = float(style.get("top", 0))
-                    left_px = float(style.get("left", 0))
-                    width_px = float(style.get("width", 140))
-                    height_px = float(style.get("height", 10))
-
-                    top = from_look(top_px)
-                    left = from_look(left_px)
-                    width = from_look(width_px)
-                    height = from_look(height_px)
-
-                box = slide.shapes.add_textbox(Inches(left + 0.1), Inches(top + 0.1), Inches(width), Inches(height))
-                tf = box.text_frame
-                tf.clear()
-                tf.word_wrap = True
-
-                alignment = style.get("align", "").lower()
-                if alignment == "center":
-                    tf.paragraphs[0].alignment = PP_ALIGN.CENTER
-                elif alignment == "right":
-                    tf.paragraphs[0].alignment = PP_ALIGN.RIGHT
-                else:
-                    tf.paragraphs[0].alignment = PP_ALIGN.LEFT
-
-                if "valign" in style:
-                    valign = style.get("valign", "").lower()
-                    if valign == "middle":
-                        tf.vertical_anchor = MSO_ANCHOR.MIDDLE
-                    elif valign == "bottom":
-                        tf.vertical_anchor = MSO_ANCHOR.BOTTOM
+            
+                    if has_position_attrs(design_el):
+                        top_px = float(design_el.attrib.get("top", 0))
+                        left_px = float(design_el.attrib.get("left", 0))
+                        width_px = float(design_el.attrib.get("width", 200))
+                        height_px = float(design_el.attrib.get("height", 200))
+                        top = from_course(top_px, "y")
+                        left = from_course(left_px, "x")
+                        width = from_course(width_px, "x")
+                        height = from_course(height_px, "y")
                     else:
-                        tf.vertical_anchor = MSO_ANCHOR.TOP
-
-                parser = HTMLtoPPTX(tf, style)
-                parser.feed(content_el.text)
+                        top_px = float(style.get("top", 0))
+                        left_px = float(style.get("left", 0))
+                        width_px = float(style.get("width", 200))
+                        height_px = float(style.get("height", 200))
+                        top = from_look(top_px)
+                        left = from_look(left_px)
+                        width = from_look(width_px)
+                        height = from_look(height_px)
+            
+                    image_dir = os.path.dirname(course_path)
+                    image_path = os.path.join(image_dir, os.path.basename(img_file))
+                    if not os.path.exists(image_path):
+                        image_dir = os.path.dirname(look_path)
+                        image_path = os.path.join(image_dir, os.path.basename(img_file))
+                    if os.path.exists(image_path):
+                        try:
+                            with Image.open(image_path) as im:
+                                orig_width_px, orig_height_px = im.size
+                            orig_ratio = orig_width_px / orig_height_px
+                            target_ratio = width / height
+            
+                            if orig_ratio > target_ratio:
+                                draw_width = width
+                                draw_height = width / orig_ratio
+                                offset_left = 0
+                                offset_top = (height - draw_height) / 2
+                            else:
+                                draw_height = height
+                                draw_width = height * orig_ratio
+                                offset_top = 0
+                                offset_left = (width - draw_width) / 2
+            
+                            slide.shapes.add_picture(
+                                image_path,
+                                Inches(left + offset_left + 0.1),
+                                Inches(top + offset_top + 0.1),
+                                width=Inches(draw_width),
+                                height=Inches(draw_height)
+                            )
+                        except Exception as e:
+                            st.warning(f"⚠️ Erreur ajout image {img_file} : {e}")
+            
+                elif tag == "text" or tag == "consigne":
+                    content_el = el.find("content")
+                    if content_el is None or not content_el.text:
+                        continue
+            
+                    text_id = el.attrib.get("id") or el.attrib.get("author_id")
+                    style = style_map.get(text_id, {})
+                    design_el = el.find("design")
+            
+                    def has_position_attrs(d):
+                        return (
+                            d is not None and any(
+                                attr in d.attrib and float(d.attrib[attr]) > 0
+                                for attr in ["top", "left", "width", "height"]
+                            )
+                        )
+            
+                    if has_position_attrs(design_el):
+                        top_px = float(design_el.attrib.get("top", 0))
+                        left_px = float(design_el.attrib.get("left", 0))
+                        width_px = float(design_el.attrib.get("width", 140))
+                        height_px = float(design_el.attrib.get("height", 10))
+                        top = from_course(top_px, "y")
+                        left = from_course(left_px, "x")
+                        width = from_course(width_px, "x")
+                        height = from_course(height_px, "y")
+                    else:
+                        top_px = float(style.get("top", 0))
+                        left_px = float(style.get("left", 0))
+                        width_px = float(style.get("width", 140))
+                        height_px = float(style.get("height", 10))
+                        top = from_look(top_px)
+                        left = from_look(left_px)
+                        width = from_look(width_px)
+                        height = from_look(height_px)
+            
+                    box = slide.shapes.add_textbox(Inches(left + 0.1), Inches(top + 0.1), Inches(width), Inches(height))
+                    tf = box.text_frame
+                    tf.clear()
+                    tf.word_wrap = True
+            
+                    alignment = style.get("align", "").lower()
+                    if alignment == "center":
+                        tf.paragraphs[0].alignment = PP_ALIGN.CENTER
+                    elif alignment == "right":
+                        tf.paragraphs[0].alignment = PP_ALIGN.RIGHT
+                    else:
+                        tf.paragraphs[0].alignment = PP_ALIGN.LEFT
+            
+                    if "valign" in style:
+                        valign = style.get("valign", "").lower()
+                        if valign == "middle":
+                            tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+                        elif valign == "bottom":
+                            tf.vertical_anchor = MSO_ANCHOR.BOTTOM
+                        else:
+                            tf.vertical_anchor = MSO_ANCHOR.TOP
+            
+                    parser = HTMLtoPPTX(tf, style)
+                    parser.feed(content_el.text)
 
         output_path = os.path.join(tmpdir, "converted.pptx")
         prs.save(output_path)
