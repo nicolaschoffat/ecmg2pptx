@@ -169,6 +169,24 @@ def add_consigne_boxes(screen, slide, style_map):
         parser = HTMLtoPPTX(tf, style)
         parser.feed(content_el.text)
 
+
+# 🔧 Ajout fonction pour traiter les fichiers externes (PDF)
+def add_external_links(screen, slide):
+    for action in screen.findall("action"):
+        if action.attrib.get("action") == "open":
+            param = action.attrib.get("param", "")
+            if param.endswith(".pdf") and param.startswith("@/"):
+                # 1. Ajouter dans les notes
+                notes = slide.notes_slide.notes_text_frame
+                notes.text += f"\n\nLien vers un document externe : {param}"
+
+                # 2. Ajouter un pictogramme textuel sur la slide (top-right par défaut)
+                box = slide.shapes.add_textbox(Inches(10), Inches(0.3), Inches(2), Inches(0.5))
+                tf = box.text_frame
+                tf.word_wrap = True
+                tf.text = "📎 Voir document joint"
+                tf.paragraphs[0].alignment = PP_ALIGN.RIGHT
+
 if uploaded_file:
     with tempfile.TemporaryDirectory() as tmpdir:
         zip_path = os.path.join(tmpdir, "module.zip")
@@ -268,6 +286,9 @@ if uploaded_file:
 
             # ✅ Ajout des consignes au début du traitement de l'écran
             add_consigne_boxes(screen, slide, style_map)
+            
+            # ✅ Ajout des liens vers documents PDF
+            add_external_links(screen, slide)
             
             y = 1.5
             # 🎥 Vidéo (si présente)
