@@ -105,12 +105,6 @@ def from_course(val, axis):
 def from_look(val):
     return float(val) * 0.01043
 
-# 🔧 Correction appliquée ici : score > 0 considéré comme bonne réponse
-# Remplacer cette ligne : label = "✅" if score == "100" else "⬜"
-# Par : label = "✅" if int(score) > 0 else "⬜"
-
-# Le reste du code sera complété après ajout du style de titre
-
 if uploaded_file:
     with tempfile.TemporaryDirectory() as tmpdir:
         zip_path = os.path.join(tmpdir, "module.zip")
@@ -245,7 +239,7 @@ if uploaded_file:
                     y += 1.0
                 for item in items.findall("item"):
                     score = item.attrib.get("score", "0")
-                    label = "✅" if score == "100" else "⬜"
+                    label = "✅" if int(score) > 0 else "⬜"
                     box = slide.shapes.add_textbox(Inches(1.2), Inches(y), Inches(9.5), Inches(0.5))
                     box.text_frame.text = f"{label} {item.text.strip()}"
                     y += 0.5
