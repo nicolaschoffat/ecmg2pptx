@@ -54,7 +54,9 @@ class HTMLtoPPTX(HTMLParser):
                     self.default_style["fontsize"] = px
                 except:
                     pass
-
+        elif tag == "br":
+            self.p = self.tf.add_paragraph()
+            
         self.run = self.p.add_run()
         self.apply_style()
 
