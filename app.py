@@ -110,6 +110,7 @@ def add_consigne_boxes(screen, slide, style_map):
     for el in screen.findall("consigne"):
         content_el = el.find("content")
         if content_el is None or not content_el.text:
+            continue
 
         text_id = el.attrib.get("id") or el.attrib.get("author_id")
         style = style_map.get(text_id, {})
@@ -246,11 +247,11 @@ if uploaded_file:
             title_text = title_el.text.strip() if title_el is not None and title_el.text else "Sans titre"
             slide = prs.slides.add_slide(prs.slide_layouts[5])
 
-            # ✅ Injection d'éléments de look.xml spécifiques à certaines pages
+            # 🔁 Injecter des éléments de look.xml spécifiques à certaines pages
             look_elements_by_page = {
                 "page_intro": ["cadre_intro", "title_UA_intro"]
             }
-    
+            
             page_id = node.attrib.get("id")
             if page_id in look_elements_by_page:
                 for el_id in look_elements_by_page[page_id]:
@@ -260,13 +261,10 @@ if uploaded_file:
                         style = style_map.get(el_id, {})
                         design_el = look_el.find("design")
                         content_el = look_el.find("content")
-    
+            
                         def has_position_attrs(d):
-                            return d is not None and any(
-                                attr in d.attrib and float(d.attrib[attr]) > 0
-                                for attr in ["top", "left", "width", "height"]
-                            )
-    
+                            return d is not None and any(attr in d.attrib and float(d.attrib[attr]) > 0 for attr in ["top", "left", "width", "height"])
+            
                         if has_position_attrs(design_el):
                             top_px = float(design_el.attrib.get("top", 0))
                             left_px = float(design_el.attrib.get("left", 0))
@@ -276,11 +274,10 @@ if uploaded_file:
                             left = from_look(left_px)
                             width = from_look(width_px)
                             height = from_look(height_px)
-    
+            
                             if tag == "image" and content_el is not None and content_el.attrib.get("file"):
                                 image_path = os.path.join(os.path.dirname(look_path), content_el.attrib["file"])
                                 if os.path.exists(image_path):
-                                    from PIL import Image
                                     with Image.open(image_path) as im:
                                         orig_width_px, orig_height_px = im.size
                                     orig_ratio = orig_width_px / orig_height_px
@@ -308,128 +305,64 @@ if uploaded_file:
                                 tf.clear()
                                 tf.word_wrap = True
                                 parser = HTMLtoPPTX(tf, style)
-                                # fallback si vide
                                 if content_el is None or not content_el.text:
                                     parser.feed(ua_title)
                                 else:
                                     parser.feed(content_el.text)
             
-                # 🔁 Injecter des éléments de look.xml spécifiques à certaines pages
-                look_elements_by_page = {
-                    "page_intro": ["cadre_intro", "title_UA_intro"]
-                }
-                
-                page_id = node.attrib.get("id")
-                if page_id in look_elements_by_page:
-                    for el_id in look_elements_by_page[page_id]:
-                        look_el = look_root.find(f".//*[@id='{el_id}']")
-                        if look_el is not None:
-                            tag = look_el.tag
-                            style = style_map.get(el_id, {})
-                            design_el = look_el.find("design")
-                            content_el = look_el.find("content")
-                
-                            def has_position_attrs(d):
-                                return d is not None and any(attr in d.attrib and float(d.attrib[attr]) > 0 for attr in ["top", "left", "width", "height"])
-                
-                            if has_position_attrs(design_el):
-                                top_px = float(design_el.attrib.get("top", 0))
-                                left_px = float(design_el.attrib.get("left", 0))
-                                width_px = float(design_el.attrib.get("width", 140))
-                                height_px = float(design_el.attrib.get("height", 10))
-                                top = from_look(top_px)
-                                left = from_look(left_px)
-                                width = from_look(width_px)
-                                height = from_look(height_px)
-                
-                                if tag == "image" and content_el is not None and content_el.attrib.get("file"):
-                                    image_path = os.path.join(os.path.dirname(look_path), content_el.attrib["file"])
-                                    if os.path.exists(image_path):
-                                        with Image.open(image_path) as im:
-                                            orig_width_px, orig_height_px = im.size
-                                        orig_ratio = orig_width_px / orig_height_px
-                                        target_ratio = width / height
-                                        if orig_ratio > target_ratio:
-                                            draw_width = width
-                                            draw_height = width / orig_ratio
-                                            offset_left = 0
-                                            offset_top = (height - draw_height) / 2
-                                        else:
-                                            draw_height = height
-                                            draw_width = height * orig_ratio
-                                            offset_top = 0
-                                            offset_left = (width - draw_width) / 2
-                                        slide.shapes.add_picture(
-                                            image_path,
-                                            Inches(left + offset_left + 0.1),
-                                            Inches(top + offset_top + 0.1),
-                                            width=Inches(draw_width),
-                                            height=Inches(draw_height)
-                                        )
-                                elif tag in ["text", "title"]:
-                                    box = slide.shapes.add_textbox(Inches(left + 0.1), Inches(top + 0.1), Inches(width), Inches(height))
-                                    tf = box.text_frame
-                                    tf.clear()
-                                    tf.word_wrap = True
-                                    parser = HTMLtoPPTX(tf, style)
-                                    if content_el is None or not content_el.text:
-                                        parser.feed(ua_title)
-                                    else:
-                                        parser.feed(content_el.text)
-                
-                title_style = style_map.get("titre_activite")
-                title_shape = slide.shapes.title
-                
-                if title_style:
-                    try:
-                        top = from_look(float(title_style.get("top", 0)))
-                        left = from_look(float(title_style.get("left", 0)))
-                        width = from_look(float(title_style.get("width", 800)))
-                        height = from_look(float(title_style.get("height", 50)))
-                
-                        title_shape.left = Inches(left + 0.1)
-                        title_shape.top = Inches(top + 0.1)
-                        title_shape.width = Inches(width)
-                        title_shape.height = Inches(height)
-                    except Exception as e:
-                        st.warning(f"❗ Erreur redimension titre: {e}")
-                
-                tf = title_shape.text_frame
-                tf.clear()
-                p = tf.paragraphs[0]
-                run = p.add_run()
-                run.text = title_text
-                
-                font = run.font
-                font.name = title_style.get("font", "Tahoma") if title_style else "Tahoma"
+            title_style = style_map.get("titre_activite")
+            title_shape = slide.shapes.title
+            
+            if title_style:
                 try:
-                    fontsize = int(title_style.get("fontsize", 22)) if title_style else 22
-                    font.size = Pt(px_to_pt.get(fontsize, int(fontsize * 0.75)))
-                except:
-                    font.size = Pt(16.5)
-                
-                font.bold = title_style.get("bold", "0") == "1" if title_style else False
-                font.italic = title_style.get("italic", "0") == "1" if title_style else False
-                
-                color = title_style.get("fontcolor", "#000000").lstrip("#") if title_style else "000000"
-                if len(color) == 6:
-                    try:
-                        font.color.rgb = RGBColor.from_string(color.upper())
-                    except ValueError:
-                        pass
-                
-                align = title_style.get("align", "left").lower() if title_style else "left"
-                if align == "center":
-                    p.alignment = PP_ALIGN.CENTER
-                elif align == "right":
-                    p.alignment = PP_ALIGN.RIGHT
-                else:
-                    p.alignment = PP_ALIGN.LEFT
-    
-                page = node.find(".//page")
-                screen = page.find("screen") if page is not None else None
-                if not screen:
-                    continue
+                    top = from_look(float(title_style.get("top", 0)))
+                    left = from_look(float(title_style.get("left", 0)))
+                    width = from_look(float(title_style.get("width", 800)))
+                    height = from_look(float(title_style.get("height", 50)))
+            
+                    title_shape.left = Inches(left + 0.1)
+                    title_shape.top = Inches(top + 0.1)
+                    title_shape.width = Inches(width)
+                    title_shape.height = Inches(height)
+                except Exception as e:
+                    st.warning(f"❗ Erreur redimension titre: {e}")
+            
+            tf = title_shape.text_frame
+            tf.clear()
+            p = tf.paragraphs[0]
+            run = p.add_run()
+            run.text = title_text
+            
+            font = run.font
+            font.name = title_style.get("font", "Tahoma") if title_style else "Tahoma"
+            try:
+                fontsize = int(title_style.get("fontsize", 22)) if title_style else 22
+                font.size = Pt(px_to_pt.get(fontsize, int(fontsize * 0.75)))
+            except:
+                font.size = Pt(16.5)
+            
+            font.bold = title_style.get("bold", "0") == "1" if title_style else False
+            font.italic = title_style.get("italic", "0") == "1" if title_style else False
+            
+            color = title_style.get("fontcolor", "#000000").lstrip("#") if title_style else "000000"
+            if len(color) == 6:
+                try:
+                    font.color.rgb = RGBColor.from_string(color.upper())
+                except ValueError:
+                    pass
+            
+            align = title_style.get("align", "left").lower() if title_style else "left"
+            if align == "center":
+                p.alignment = PP_ALIGN.CENTER
+            elif align == "right":
+                p.alignment = PP_ALIGN.RIGHT
+            else:
+                p.alignment = PP_ALIGN.LEFT
+
+            page = node.find(".//page")
+            screen = page.find("screen") if page is not None else None
+            if not screen:
+                continue
 
             # ✅ Ajout des consignes au début du traitement de l'écran
             add_consigne_boxes(screen, slide, style_map)
@@ -497,7 +430,7 @@ if uploaded_file:
                 if tag == "image":
                     content = el.find("content")
                     if content is None or not content.attrib.get("file"):
-    continue
+                        continue
                     img_file = content.attrib["file"]
                     image_id = el.attrib.get("id") or el.attrib.get("author_id")
                     style = style_map.get(image_id, {})
@@ -566,7 +499,7 @@ if uploaded_file:
                 elif tag == "text" or tag == "consigne":
                     content_el = el.find("content")
                     if content_el is None or not content_el.text:
-    continue
+                        continue
             
                     text_id = el.attrib.get("id") or el.attrib.get("author_id")
                     style = style_map.get(text_id, {})
