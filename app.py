@@ -110,7 +110,6 @@ def add_consigne_boxes(screen, slide, style_map):
     for el in screen.findall("consigne"):
         content_el = el.find("content")
         if content_el is None or not content_el.text:
-            continue
 
         text_id = el.attrib.get("id") or el.attrib.get("author_id")
         style = style_map.get(text_id, {})
@@ -428,11 +427,10 @@ if uploaded_file:
                 p.alignment = PP_ALIGN.LEFT
 
             page = node.find(".//page")
-            screen = page.find("screen")
-            if page is not None
-            else None
-                if not screen:
-                    continue
+            screen = page.find("screen") if page is not None else None
+            if not screen:
+    continue
+    continue
 
             # ✅ Ajout des consignes au début du traitement de l'écran
             add_consigne_boxes(screen, slide, style_map)
@@ -500,7 +498,7 @@ if uploaded_file:
                 if tag == "image":
                     content = el.find("content")
                     if content is None or not content.attrib.get("file"):
-                        continue
+    continue
                     img_file = content.attrib["file"]
                     image_id = el.attrib.get("id") or el.attrib.get("author_id")
                     style = style_map.get(image_id, {})
@@ -569,7 +567,7 @@ if uploaded_file:
                 elif tag == "text" or tag == "consigne":
                     content_el = el.find("content")
                     if content_el is None or not content_el.text:
-                        continue
+    continue
             
                     text_id = el.attrib.get("id") or el.attrib.get("author_id")
                     style = style_map.get(text_id, {})
