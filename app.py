@@ -105,6 +105,70 @@ def from_course(val, axis):
 def from_look(val):
     return float(val) * 0.01043
 
+def add_consigne_boxes(screen, slide, style_map):
+    for el in screen.findall("consigne"):
+        content_el = el.find("content")
+        if content_el is None or not content_el.text:
+            continue
+
+        text_id = el.attrib.get("id") or el.attrib.get("author_id")
+        style = style_map.get(text_id, {})
+        design_el = el.find("design")
+
+        def has_position_attrs(d):
+            return (
+                d is not None and any(
+                    attr in d.attrib and float(d.attrib[attr]) > 0
+                    for attr in ["top", "left", "width", "height"]
+                )
+            )
+
+        if has_position_attrs(design_el):
+            top_px = float(design_el.attrib.get("top", 0))
+            left_px = float(design_el.attrib.get("left", 0))
+            width_px = float(design_el.attrib.get("width", 140))
+            height_px = float(design_el.attrib.get("height", 10))
+
+            top = from_course(top_px, "y")
+            left = from_course(left_px, "x")
+            width = from_course(width_px, "x")
+            height = from_course(height_px, "y")
+        else:
+            top_px = float(style.get("top", 0))
+            left_px = float(style.get("left", 0))
+            width_px = float(style.get("width", 140))
+            height_px = float(style.get("height", 10))
+
+            top = from_look(top_px)
+            left = from_look(left_px)
+            width = from_look(width_px)
+            height = from_look(height_px)
+
+        box = slide.shapes.add_textbox(Inches(left + 0.1), Inches(top + 0.1), Inches(width), Inches(height))
+        tf = box.text_frame
+        tf.clear()
+        tf.word_wrap = True
+
+        alignment = style.get("align", "").lower()
+        if alignment == "center":
+            tf.paragraphs[0].alignment = PP_ALIGN.CENTER
+        elif alignment == "right":
+            tf.paragraphs[0].alignment = PP_ALIGN.RIGHT
+        else:
+            tf.paragraphs[0].alignment = PP_ALIGN.LEFT
+
+        if "valign" in style:
+            valign = style.get("valign", "").lower()
+            if valign == "middle":
+                tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+            elif valign == "bottom":
+                tf.vertical_anchor = MSO_ANCHOR.BOTTOM
+            else:
+                tf.vertical_anchor = MSO_ANCHOR.TOP
+
+        parser = HTMLtoPPTX(tf, style)
+        parser.feed(content_el.text)
+
 if uploaded_file:
     with tempfile.TemporaryDirectory() as tmpdir:
         zip_path = os.path.join(tmpdir, "module.zip")
