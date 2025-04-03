@@ -386,34 +386,34 @@ if uploaded_file:
                 if not os.path.exists(image_path):
                     image_dir = os.path.dirname(look_path)
                     image_path = os.path.join(image_dir, os.path.basename(img_file))
+                if not os.path.exists(image_path):
+                    image_dir = os.path.dirname(look_path)
+                    image_path = os.path.join(image_dir, os.path.basename(img_file))
                 if os.path.exists(image_path):
                     try:
-                        from PIL import Image
+                        with Image.open(image_path) as im:
+                            orig_width_px, orig_height_px = im.size
+                        orig_ratio = orig_width_px / orig_height_px
+                        target_ratio = width / height
 
-with Image.open(image_path) as im:
-    orig_width_px, orig_height_px = im.size
-orig_ratio = orig_width_px / orig_height_px
-target_ratio = width / height
+                        if orig_ratio > target_ratio:
+                            draw_width = width
+                            draw_height = width / orig_ratio
+                            offset_left = 0
+                            offset_top = (height - draw_height) / 2
+                        else:
+                            draw_height = height
+                            draw_width = height * orig_ratio
+                            offset_top = 0
+                            offset_left = (width - draw_width) / 2
 
-if orig_ratio > target_ratio:
-    draw_width = width
-    draw_height = width / orig_ratio
-    offset_left = 0
-    offset_top = (height - draw_height) / 2
-else:
-    draw_height = height
-    draw_width = height * orig_ratio
-    offset_top = 0
-    offset_left = (width - draw_width) / 2
-
-slide.shapes.add_picture(
-    image_path,
-    Inches(left + offset_left + 0.1),
-    Inches(top + offset_top + 0.1),
-    width=Inches(draw_width),
-    height=Inches(draw_height)
-)
-
+                        slide.shapes.add_picture(
+                            image_path,
+                            Inches(left + offset_left + 0.1),
+                            Inches(top + offset_top + 0.1),
+                            width=Inches(draw_width),
+                            height=Inches(draw_height)
+                        )
                     except Exception as e:
                         st.warning(f"⚠️ Erreur ajout image {img_file} : {e}")
                 else:
