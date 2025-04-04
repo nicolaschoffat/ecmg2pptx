@@ -109,16 +109,15 @@ def from_course(val, axis):
 def from_look(val):
     return float(val) * 0.01043
 
-def add_vista_to_notes(screen, slide):
-    vista_el = screen.find(".//content[@type='Vista']")
-    if vista_el is not None:
-        items_el = vista_el.find("items")
+def add_content_items_to_notes(screen, slide, type_name, label_icon):
+    content_el = screen.find(f".//content[@type='{type_name}']")
+    if content_el is not None:
+        items_el = content_el.find("items")
         if items_el is not None:
-            bullet_lines = ["🪟 Vue Vista :"]
+            bullet_lines = [f"{label_icon} Vue {type_name} :"]
             for item in items_el.findall("item"):
                 raw = "".join(item.itertext()).strip()
                 soup = BeautifulSoup(raw, "html.parser")
-                # Convert basic formatting
                 for b in soup.find_all("b"):
                     b.insert_before("**")
                     b.insert_after("**")
@@ -129,13 +128,13 @@ def add_vista_to_notes(screen, slide):
                 bullet_lines.append(f"• {text}")
             notes = slide.notes_slide.notes_text_frame
             notes.text += "\n\n" + "\n".join(bullet_lines)
-            # Indication visuelle sur la diapositive
+            # Indication sur la slide
             label_box = slide.shapes.add_textbox(Inches(9.5), Inches(0.2), Inches(2.2), Inches(0.5))
             tf = label_box.text_frame
             tf.word_wrap = True
             p = tf.paragraphs[0]
             run = p.add_run()
-            run.text = "🪟 Cartes Vista"
+            run.text = f"{label_icon} Cartes {type_name}"
             font = run.font
             font.name = "Arial"
             font.size = Pt(12)
@@ -400,8 +399,10 @@ if uploaded_file:
             if not screen:
                 continue
             
-            # ✅ Ajout pages vista en commentaire
-            add_vista_to_notes(screen, slide)
+            # ✅ Ajout de contenu spécifique selon type (Vista, Cards, Carousel)
+            add_content_items_to_notes(screen, slide, "Vista", "🪟")
+            add_content_items_to_notes(screen, slide, "Cards", "🃏")
+            add_content_items_to_notes(screen, slide, "Carousel", "🎠")
             
             # ✅ Ajout des consignes au début du traitement de l'écran
             add_consigne_boxes(screen, slide, style_map)
