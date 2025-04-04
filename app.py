@@ -118,17 +118,23 @@ def add_content_items_to_notes(screen, slide, type_name, label_icon):
     bullet_lines = [f"{label_icon} Vue {type_name} :"]
 
     if type_name == "Cards":
-        for card in content_el.findall("card"):
-            face_text = card.findtext("face")
-            back_text = card.findtext("back")
-            clean_face = BeautifulSoup(face_text or "", "html.parser").get_text().strip()
-            clean_back = BeautifulSoup(back_text or "", "html.parser").get_text().strip()
+        cards_wrapper = content_el.find("cards")
+        if cards_wrapper is not None:
+            for card in cards_wrapper.findall("card"):
+                face_el = card.find("face")
+                back_el = card.find("back")
 
-            bullet_lines.append("• Face :")
-            bullet_lines.append(clean_face)
-            bullet_lines.append("• Back :")
-            bullet_lines.append(clean_back)
-            bullet_lines.append("")
+                face_raw = "".join(face_el.itertext()) if face_el is not None else ""
+                back_raw = "".join(back_el.itertext()) if back_el is not None else ""
+
+                face_text = BeautifulSoup(face_raw, "html.parser").get_text().strip()
+                back_text = BeautifulSoup(back_raw, "html.parser").get_text().strip()
+
+                bullet_lines.append("• Face :")
+                bullet_lines.append(face_text)
+                bullet_lines.append("• Back :")
+                bullet_lines.append(back_text)
+                bullet_lines.append("")
 
     elif type_name == "Carousel" or type_name == "Vista":
         items_el = content_el.find("items")
