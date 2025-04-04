@@ -109,98 +109,39 @@ def from_course(val, axis):
 def from_look(val):
     return float(val) * 0.01043
 
-
-def process_interactive_activity(screen, slide, page, style_map, author_map, course_dir, look_dir):
-    elfe = screen.find("elfe")
-    if elfe is None or elfe.find("content") is None:
+def add_content_items_to_notes(screen, slide, type_name, label_icon):
+    content_el = screen.find(f".//content[@type='{type_name}']")
+    if content_el is None:
         return
 
-    content = elfe.find("content")
-    elfe_type = content.attrib.get("type", "Inconnu")
-
-    # ➕ Label sur la slide
-    box = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(5), Inches(0.5))
-    tf = box.text_frame
-    tf.word_wrap = True
-    p = tf.paragraphs[0]
-    run = p.add_run()
-    run.text = f"🧩 Activité : {elfe_type}"
-    run.font.bold = True
-    p.alignment = PP_ALIGN.LEFT
-
-    y = 1.0
     notes = slide.notes_slide.notes_text_frame
-    notes.text += f"\n🧩 Activité de type {elfe_type}\n"
+    bullet_lines = [f"{label_icon} Vue {type_name} :"]
 
-    # ✅ Consigne
-    consigne = screen.find("consigne")
-    if consigne is not None:
-        content_el = consigne.find("content")
-        if content_el is not None and content_el.text:
-            soup = BeautifulSoup(content_el.text, "html.parser")
-            tf = slide.shapes.add_textbox(Inches(0.5), Inches(y), Inches(11), Inches(1)).text_frame
-            tf.text = "📋 Consigne : " + soup.get_text()
-            y += 0.7
+    if type_name == "Cards":
+        cards_wrapper = content_el.find("cards")
+        if cards_wrapper is not None:
+            for card in cards_wrapper.findall("card"):
+                face_el = card.find("face")
+                back_el = card.find("back")
 
-    # ✅ Question
-    question = screen.find("question")
-    if question is not None:
-        content_el = question.find("content")
-        if content_el is not None and content_el.text:
-            soup = BeautifulSoup(content_el.text, "html.parser")
-            tf = slide.shapes.add_textbox(Inches(0.5), Inches(y), Inches(11), Inches(1)).text_frame
-            tf.text = "❓ " + soup.get_text()
-            y += 0.8
+                face_raw = "".join(face_el.itertext()) if face_el is not None else ""
+                back_raw = "".join(back_el.itertext()) if back_el is not None else ""
 
-    # ✅ Réponses
-    items = content.find("items")
-    if items is not None:
-        for item in items.findall("item"):
-            text = item.text.strip() if item.text else ""
-            score = item.attrib.get("score", "0")
-            label = "✅" if int(score) > 0 else "⬜"
-            tf = slide.shapes.add_textbox(Inches(0.7), Inches(y), Inches(10), Inches(0.5)).text_frame
-            tf.text = f"{label} {text}"
-            y += 0.5
+                face_text = BeautifulSoup(face_raw, "html.parser").get_text().strip()
+                back_text = BeautifulSoup(back_raw, "html.parser").get_text().strip()
 
-    # ✅ Image pour MCQPic (depuis <links>)
-    if elfe_type == "MCQPic":
-        links = elfe.find("links")
-        if links is not None:
-            for link in links.findall("link"):
-                file = link.attrib.get("file")
-                if file:
-                    img_path = os.path.join(course_dir, os.path.basename(file))
-                    if not os.path.exists(img_path):
-                        img_path = os.path.join(look_dir, os.path.basename(file))
-                    if os.path.exists(img_path):
-                        try:
-                            slide.shapes.add_picture(img_path, Inches(1), Inches(y), Inches(5), Inches(3))
-                            y += 3.2
-                        except Exception as e:
-                            notes.text += f"\n⚠️ Erreur image {file} : {e}"
+                bullet_lines.append("• Face :")
+                bullet_lines.append(face_text)
+                bullet_lines.append("• Back :")
+                bullet_lines.append(back_text)
+                bullet_lines.append("")
 
-    # ✅ Feedbacks
-    feedbacks = page.findall(".//feedbacks/correc/fb/screen/feedback")
-    feedback_texts = []
-    for fb in feedbacks:
-        fb_content = fb.find("content")
-        if fb_content is not None and fb_content.text:
-            soup = BeautifulSoup(fb_content.text, "html.parser")
-            feedback_texts.append(soup.get_text(separator="\n"))
-    if feedback_texts:
-        notes.text += "\n---\n" + "\n---\n".join(feedback_texts)
-
-def add_vista_to_notes(screen, slide):
-    vista_el = screen.find(".//content[@type='Vista']")
-    if vista_el is not None:
-        items_el = vista_el.find("items")
+    elif type_name == "Carousel" or type_name == "Vista":
+        items_el = content_el.find("items")
         if items_el is not None:
-            bullet_lines = ["🪟 Vue Vista :"]
             for item in items_el.findall("item"):
                 raw = "".join(item.itertext()).strip()
                 soup = BeautifulSoup(raw, "html.parser")
-                # Convert basic formatting
                 for b in soup.find_all("b"):
                     b.insert_before("**")
                     b.insert_after("**")
@@ -209,20 +150,22 @@ def add_vista_to_notes(screen, slide):
                     i_tag.insert_after("_")
                 text = soup.get_text(separator="\n").strip()
                 bullet_lines.append(f"• {text}")
-            notes = slide.notes_slide.notes_text_frame
-            notes.text += "\n\n" + "\n".join(bullet_lines)
-            # Indication visuelle sur la diapositive
-            label_box = slide.shapes.add_textbox(Inches(9.5), Inches(0.2), Inches(2.2), Inches(0.5))
-            tf = label_box.text_frame
-            tf.word_wrap = True
-            p = tf.paragraphs[0]
-            run = p.add_run()
-            run.text = "🪟 Cartes Vista"
-            font = run.font
-            font.name = "Arial"
-            font.size = Pt(12)
-            font.bold = True
-            p.alignment = PP_ALIGN.RIGHT
+
+    if len(bullet_lines) > 1:
+        notes.text += "\n\n" + "\n".join(bullet_lines)
+
+        # Label visuel sur slide
+        label_box = slide.shapes.add_textbox(Inches(9.4), Inches(0.2), Inches(2.4), Inches(0.6))
+        tf = label_box.text_frame
+        tf.word_wrap = True
+        p = tf.paragraphs[0]
+        run = p.add_run()
+        run.text = f"{label_icon} Cartes {type_name}"
+        font = run.font
+        font.name = "Arial"
+        font.size = Pt(12)
+        font.bold = True
+        p.alignment = PP_ALIGN.RIGHT
 
 def add_consigne_boxes(screen, slide, style_map):
     for el in screen.findall("consigne"):
@@ -481,10 +424,48 @@ if uploaded_file:
             screen = page.find("screen") if page is not None else None
             if not screen:
                 continue
+
+            page_type = node.find("page").attrib.get("type", "") if node.find("page") is not None else ""
+
+            if page_type == "result":
+                # 📌 Label "Page Bilan"
+                box = slide.shapes.add_textbox(Inches(9.4), Inches(0.2), Inches(2.4), Inches(0.6))
+                tf = box.text_frame
+                tf.word_wrap = True
+                p = tf.paragraphs[0]
+                run = p.add_run()
+                run.text = "📊 Page Bilan"
+                font = run.font
+                font.name = "Arial"
+                font.size = Pt(12)
+                font.bold = True
+                p.alignment = PP_ALIGN.RIGHT
             
-                        process_interactive_activity(screen, slide, page, style_map, author_map, os.path.dirname(course_path), os.path.dirname(look_path))
-# ✅ Ajout pages vista en commentaire
-            add_vista_to_notes(screen, slide)
+                # 📋 Notes avec les textes pour chaque score
+                page_el = node.find("page")
+                results_el = page_el.find("results") if page_el is not None else None
+                if results_el is not None:
+                    notes = slide.notes_slide.notes_text_frame
+                    notes.text += "\n\n🧾 Résultats affichés selon score :\n"
+            
+                    for result in results_el.findall("result"):
+                        score = result.attrib.get("score", "?")
+                        screen_result = result.find("screen")
+                        text_block = screen_result.find("text") if screen_result is not None else None
+                        content_el = text_block.find("content") if text_block is not None else None
+            
+                        raw = "".join(content_el.itertext()) if content_el is not None else ""
+                        text_clean = BeautifulSoup(raw, "html.parser").get_text().strip()
+            
+                        notes.text += f"\n---\n🔢 Score {score} :\n{text_clean}\n"
+
+                if results_el is None:
+                    st.warning(f"Pas de résultats trouvés dans page id={node.attrib.get('id')}")
+           
+            # ✅ Ajout de contenu spécifique selon type (Vista, Cards, Carousel)
+            add_content_items_to_notes(screen, slide, "Vista", "🪟")
+            add_content_items_to_notes(screen, slide, "Cards", "🃏")
+            add_content_items_to_notes(screen, slide, "Carousel", "🎠")
             
             # ✅ Ajout des consignes au début du traitement de l'écran
             add_consigne_boxes(screen, slide, style_map)
@@ -535,46 +516,7 @@ if uploaded_file:
                         audio_notes.append(f"Audio : {filename}\nTexte lu : {audio_text or '[non trouvé]'}")
                 if audio_notes:
                     notes.text += "\n\n" + "\n---\n".join(audio_notes)
-            
-            # 🔍 Activités interactives de type Elfe
-            elfe = screen.find("elfe")
-            if elfe is not None:
-                elfe_type = elfe.attrib.get("id", "").strip()
-                content_el = elfe.find("content")
-                if content_el is not None:
-                    elfe_items = content_el.find("items")
-                    question_el = screen.find("question")
-                    feedbacks = page.findall(".//feedbacks/correc/fb/screen/feedback")
-                    notes = slide.notes_slide.notes_text_frame
-
-                    y = 1.5
-                    if question_el is not None:
-                        raw_q = question_el.find("content")
-                        if raw_q is not None and raw_q.text:
-                            question_text = BeautifulSoup(raw_q.text, "html.parser").get_text()
-                            box = slide.shapes.add_textbox(Inches(1), Inches(y), Inches(10), Inches(1))
-                            box.text_frame.text = f"❓ {question_text}"
-                            y += 1.0
-
-                    if elfe_items is not None:
-                        for item in elfe_items.findall("item"):
-                            score = item.attrib.get("score", "0")
-                            label = "✅" if int(score) > 0 else "⬜"
-                            txt = item.text.strip() if item.text else ""
-                            box = slide.shapes.add_textbox(Inches(1.2), Inches(y), Inches(9.5), Inches(0.5))
-                            box.text_frame.text = f"{label} {txt}"
-                            y += 0.5
-
-                    if feedbacks:
-                        feedback_texts = []
-                        for fb in feedbacks:
-                            fb_content = fb.find("content")
-                            if fb_content is not None and fb_content.text:
-                                soup = BeautifulSoup(fb_content.text, "html.parser")
-                                feedback_texts.append(soup.get_text(separator="\n"))
-                        if feedback_texts:
-                            notes.text += "\n---\n" + "\n---\n".join(feedback_texts)
-# ❓ QCM (MCQText)
+            # ❓ QCM (MCQText)
             elfe = screen.find("elfe")
             if elfe is not None and elfe.find("content") is not None and elfe.find("content").attrib.get("type") == "MCQText":
                 items = elfe.find("content/items")
