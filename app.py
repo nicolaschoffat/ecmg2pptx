@@ -155,14 +155,14 @@ def process_interactive_activity(screen, slide, page, style_map, author_map, cou
     # ✅ Réponses (seulement si activité pas graphique type Cards/Vista/Carousel/etc)
     if elfe_type not in ["Vista", "Cards", "Carousel", "RejectDrag"]:
         items = content.find("items")
-    if items is not None:
-        for item in items.findall("item"):
-            text = item.text.strip() if item.text else ""
-            score = item.attrib.get("score", "0")
-            label = "✅" if int(score) > 0 else "⬜"
-            tf = slide.shapes.add_textbox(Inches(0.7), Inches(y), Inches(10), Inches(0.5)).text_frame
-            tf.text = f"{label} {text}"
-            y += 0.5
+        if items is not None:
+            for item in items.findall("item"):
+                text = item.text.strip() if item.text else ""
+                score = item.attrib.get("score", "0")
+                label = "✅" if int(score) > 0 else "⬜"
+                tf = slide.shapes.add_textbox(Inches(0.7), Inches(y), Inches(10), Inches(0.5)).text_frame
+                tf.text = f"{label} {text}"
+                y += 0.5
 
     # ✅ Image pour MCQPic (depuis <links>)
     if elfe_type == "MCQPic":
@@ -483,8 +483,6 @@ if uploaded_file:
             if not screen:
                 continue
             
-            process_interactive_activity(screen, slide, page, style_map, author_map, os.path.dirname(course_path), os.path.dirname(look_path))
-
             # ✅ Ajout pages vista en commentaire
             add_vista_to_notes(screen, slide)
             
