@@ -111,10 +111,28 @@ def from_look(val):
 
 def add_content_items_to_notes(screen, slide, type_name, label_icon):
     content_el = screen.find(f".//content[@type='{type_name}']")
-    if content_el is not None:
+    if content_el is None:
+        return
+
+    notes = slide.notes_slide.notes_text_frame
+    bullet_lines = [f"{label_icon} Vue {type_name} :"]
+
+    if type_name == "Cards":
+        for card in content_el.findall("card"):
+            face_text = card.findtext("face")
+            back_text = card.findtext("back")
+            clean_face = BeautifulSoup(face_text or "", "html.parser").get_text().strip()
+            clean_back = BeautifulSoup(back_text or "", "html.parser").get_text().strip()
+
+            bullet_lines.append("• Face :")
+            bullet_lines.append(clean_face)
+            bullet_lines.append("• Back :")
+            bullet_lines.append(clean_back)
+            bullet_lines.append("")
+
+    elif type_name == "Carousel" or type_name == "Vista":
         items_el = content_el.find("items")
         if items_el is not None:
-            bullet_lines = [f"{label_icon} Vue {type_name} :"]
             for item in items_el.findall("item"):
                 raw = "".join(item.itertext()).strip()
                 soup = BeautifulSoup(raw, "html.parser")
@@ -126,20 +144,22 @@ def add_content_items_to_notes(screen, slide, type_name, label_icon):
                     i_tag.insert_after("_")
                 text = soup.get_text(separator="\n").strip()
                 bullet_lines.append(f"• {text}")
-            notes = slide.notes_slide.notes_text_frame
-            notes.text += "\n\n" + "\n".join(bullet_lines)
-            # Indication sur la slide
-            label_box = slide.shapes.add_textbox(Inches(9.5), Inches(0.2), Inches(2.2), Inches(0.5))
-            tf = label_box.text_frame
-            tf.word_wrap = True
-            p = tf.paragraphs[0]
-            run = p.add_run()
-            run.text = f"{label_icon} Cartes {type_name}"
-            font = run.font
-            font.name = "Arial"
-            font.size = Pt(12)
-            font.bold = True
-            p.alignment = PP_ALIGN.RIGHT
+
+    if len(bullet_lines) > 1:
+        notes.text += "\n\n" + "\n".join(bullet_lines)
+
+        # Label visuel sur slide
+        label_box = slide.shapes.add_textbox(Inches(9.4), Inches(0.2), Inches(2.4), Inches(0.6))
+        tf = label_box.text_frame
+        tf.word_wrap = True
+        p = tf.paragraphs[0]
+        run = p.add_run()
+        run.text = f"{label_icon} Cartes {type_name}"
+        font = run.font
+        font.name = "Arial"
+        font.size = Pt(12)
+        font.bold = True
+        p.alignment = PP_ALIGN.RIGHT
 
 def add_consigne_boxes(screen, slide, style_map):
     for el in screen.findall("consigne"):
