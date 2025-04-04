@@ -458,7 +458,10 @@ if uploaded_file:
                         text_clean = BeautifulSoup(raw, "html.parser").get_text().strip()
             
                         notes.text += f"\n---\n🔢 Score {score} :\n{text_clean}\n"
-            
+
+                if results_el is None:
+                    st.warning(f"Pas de résultats trouvés dans page id={node.attrib.get('id')}")
+           
             # ✅ Ajout de contenu spécifique selon type (Vista, Cards, Carousel)
             add_content_items_to_notes(screen, slide, "Vista", "🪟")
             add_content_items_to_notes(screen, slide, "Cards", "🃏")
