@@ -421,9 +421,12 @@ if uploaded_file:
                 p.alignment = PP_ALIGN.LEFT
 
             page = node.find(".//page")
-            page_type = page.attrib.get("type", "") if page is not None else ""
-            
-            # ⚠️ Ne saute PAS les pages bilan si pas de screen direct
+            screen = page.find("screen") if page is not None else None
+            if not screen:
+                continue
+
+            page_type = node.find("page").attrib.get("type", "") if node.find("page") is not None else ""
+
             if page_type == "result":
                 # 📌 Label "Page Bilan"
                 box = slide.shapes.add_textbox(Inches(9.4), Inches(0.2), Inches(2.4), Inches(0.6))
@@ -439,7 +442,8 @@ if uploaded_file:
                 p.alignment = PP_ALIGN.RIGHT
             
                 # 📋 Notes avec les textes pour chaque score
-                results_el = page.find("results") if page is not None else None
+                page_el = node.find("page")
+                results_el = page_el.find("results") if page_el is not None else None
                 if results_el is not None:
                     notes = slide.notes_slide.notes_text_frame
                     notes.text += "\n\n🧾 Résultats affichés selon score :\n"
@@ -454,12 +458,9 @@ if uploaded_file:
                         text_clean = BeautifulSoup(raw, "html.parser").get_text().strip()
             
                         notes.text += f"\n---\n🔢 Score {score} :\n{text_clean}\n"
-            
-            # Ensuite seulement : screen direct
-            screen = page.find("screen") if page is not None else None
-            if not screen:
-                continue
 
+                if results_el is None:
+                    st.warning(f"Pas de résultats trouvés dans page id={node.attrib.get('id')}")
            
             # ✅ Ajout de contenu spécifique selon type (Vista, Cards, Carousel)
             add_content_items_to_notes(screen, slide, "Vista", "🪟")
