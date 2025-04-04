@@ -109,6 +109,27 @@ def from_course(val, axis):
 def from_look(val):
     return float(val) * 0.01043
 
+def add_vista_to_notes(screen, slide):
+    vista_el = screen.find(".//content[@type='Vista']")
+    if vista_el is not None:
+        items_el = vista_el.find("items")
+        if items_el is not None:
+            bullet_lines = ["🪟 Vue Vista :"]
+            for item in items_el.findall("item"):
+                raw = item.text or ""
+                soup = BeautifulSoup(raw, "html.parser")
+                # Convert basic formatting
+                for b in soup.find_all("b"):
+                    b.insert_before("**")
+                    b.insert_after("**")
+                for i_tag in soup.find_all("i"):
+                    i_tag.insert_before("_")
+                    i_tag.insert_after("_")
+                text = soup.get_text(separator="\n").strip()
+                bullet_lines.append(f"• {text}")
+            notes = slide.notes_slide.notes_text_frame
+            notes.text += "\n\n" + "\n".join(bullet_lines)
+
 def add_consigne_boxes(screen, slide, style_map):
     for el in screen.findall("consigne"):
         content_el = el.find("content")
@@ -366,7 +387,10 @@ if uploaded_file:
             screen = page.find("screen") if page is not None else None
             if not screen:
                 continue
-
+            
+            # ✅ Ajout pages vista en commentaire
+            add_vista_to_notes(screen, slide)
+            
             # ✅ Ajout des consignes au début du traitement de l'écran
             add_consigne_boxes(screen, slide, style_map)
             
