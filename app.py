@@ -129,18 +129,18 @@ def add_vista_to_notes(screen, slide):
                 bullet_lines.append(f"• {text}")
             notes = slide.notes_slide.notes_text_frame
             notes.text += "\n\n" + "\n".join(bullet_lines)
-    # Indication visuelle sur la diapositive
-    label_box = slide.shapes.add_textbox(Inches(9.5), Inches(0.2), Inches(2.2), Inches(0.5))
-    tf = label_box.text_frame
-    tf.word_wrap = True
-    p = tf.paragraphs[0]
-    run = p.add_run()
-    run.text = "🪟 Cartes Vista"
-    font = run.font
-    font.name = "Arial"
-    font.size = Pt(12)
-    font.bold = True
-    p.alignment = PP_ALIGN.RIGHT
+            # Indication visuelle sur la diapositive
+            label_box = slide.shapes.add_textbox(Inches(9.5), Inches(0.2), Inches(2.2), Inches(0.5))
+            tf = label_box.text_frame
+            tf.word_wrap = True
+            p = tf.paragraphs[0]
+            run = p.add_run()
+            run.text = "🪟 Cartes Vista"
+            font = run.font
+            font.name = "Arial"
+            font.size = Pt(12)
+            font.bold = True
+            p.alignment = PP_ALIGN.RIGHT
 
 def add_consigne_boxes(screen, slide, style_map):
     for el in screen.findall("consigne"):
