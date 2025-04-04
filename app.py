@@ -56,6 +56,7 @@ class HTMLtoPPTX(HTMLParser):
                     pass
         elif tag == "br":
             self.p = self.tf.add_paragraph()
+            self.p.alignment = self.tf.paragraphs[0].alignment  # hérite de l'alignement du premier
             
         self.run = self.p.add_run()
         self.apply_style()
