@@ -487,9 +487,6 @@ if uploaded_file:
             # ✅ Ajout pages vista en commentaire
             add_vista_to_notes(screen, slide)
             
-            # ✅ Ajout des consignes au début du traitement de l'écran
-            add_consigne_boxes(screen, slide, style_map)
-            
             # ✅ Ajout des liens vers documents PDF
             add_external_links(screen, slide)
             
