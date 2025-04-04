@@ -384,6 +384,23 @@ if uploaded_file:
                 tf = box.text_frame
                 tf.text = f" Vidéo : {video_file} à intégrer"
                 tf.paragraphs[0].alignment = PP_ALIGN.CENTER
+
+            # 🎞️ Flash (animation à convertir)
+            for flash_el in screen.findall(".//flash"):
+                content_el = flash_el.find("content")
+                if content_el is not None and "file" in content_el.attrib:
+                    flash_file = content_el.attrib["file"]
+                    # Ajout d'un pictogramme texte sur la slide
+                    box = slide.shapes.add_textbox(Inches(1), Inches(5.5), Inches(10), Inches(0.6))
+                    tf = box.text_frame
+                    tf.word_wrap = True
+                    tf.text = f"🎞️ Animation Flash à recréer ou convertir depuis ECMG : {flash_file}"
+                    tf.paragraphs[0].alignment = PP_ALIGN.LEFT
+            
+                    # Ajout dans les notes pour l'auteur
+                    notes = slide.notes_slide.notes_text_frame
+                    notes.text += f"\nContenu Flash détecté : {flash_file}"
+        
             # 🔊 Sons (audio)
             sound_blocks = screen.findall(".//sound")
             if sound_blocks:
