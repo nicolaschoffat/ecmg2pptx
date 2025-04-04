@@ -442,7 +442,8 @@ if uploaded_file:
                 p.alignment = PP_ALIGN.RIGHT
             
                 # 📋 Notes avec les textes pour chaque score
-                results_el = node.find(".//results")
+                page_el = node.find("page")
+                results_el = page_el.find("results") if page_el is not None else None
                 if results_el is not None:
                     notes = slide.notes_slide.notes_text_frame
                     notes.text += "\n\n🧾 Résultats affichés selon score :\n"
