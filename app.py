@@ -156,7 +156,6 @@ def process_interactive_activity(screen, slide, page, style_map, author_map, cou
     if elfe_type not in ["Vista", "Cards", "Carousel", "RejectDrag"]:
     items = content.find("items")
     if items is not None:
-    if items is not None:
         for item in items.findall("item"):
             text = item.text.strip() if item.text else ""
             score = item.attrib.get("score", "0")
