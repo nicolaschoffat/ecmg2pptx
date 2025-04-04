@@ -482,8 +482,9 @@ if uploaded_file:
             if not screen:
                 continue
             
-                        process_interactive_activity(screen, slide, page, style_map, author_map, os.path.dirname(course_path), os.path.dirname(look_path))
-# ✅ Ajout pages vista en commentaire
+            process_interactive_activity(screen, slide, page, style_map, author_map, os.path.dirname(course_path), os.path.dirname(look_path))
+
+            # ✅ Ajout pages vista en commentaire
             add_vista_to_notes(screen, slide)
             
             # ✅ Ajout des consignes au début du traitement de l'écran
