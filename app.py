@@ -154,7 +154,7 @@ def process_interactive_activity(screen, slide, page, style_map, author_map, cou
 
     # ✅ Réponses (seulement si activité pas graphique type Cards/Vista/Carousel/etc)
     if elfe_type not in ["Vista", "Cards", "Carousel", "RejectDrag"]:
-    items = content.find("items")
+        items = content.find("items")
     if items is not None:
         for item in items.findall("item"):
             text = item.text.strip() if item.text else ""
