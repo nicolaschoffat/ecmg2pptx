@@ -482,10 +482,12 @@ if uploaded_file:
             if not screen:
                 continue
             
-            process_interactive_activity(screen, slide, page, style_map, author_map, os.path.dirname(course_path), os.path.dirname(look_path))
-
-            # ✅ Ajout pages vista en commentaire
+                        process_interactive_activity(screen, slide, page, style_map, author_map, os.path.dirname(course_path), os.path.dirname(look_path))
+# ✅ Ajout pages vista en commentaire
             add_vista_to_notes(screen, slide)
+            
+            # ✅ Ajout des consignes au début du traitement de l'écran
+            add_consigne_boxes(screen, slide, style_map)
             
             # ✅ Ajout des liens vers documents PDF
             add_external_links(screen, slide)
@@ -572,7 +574,32 @@ if uploaded_file:
                                 feedback_texts.append(soup.get_text(separator="\n"))
                         if feedback_texts:
                             notes.text += "\n---\n" + "\n---\n".join(feedback_texts)
-
+# ❓ QCM (MCQText)
+            elfe = screen.find("elfe")
+            if elfe is not None and elfe.find("content") is not None and elfe.find("content").attrib.get("type") == "MCQText":
+                items = elfe.find("content/items")
+                question_el = screen.find("question")
+                if question_el is not None:
+                    question_text = BeautifulSoup(question_el.find("content").text, "html.parser").get_text()
+                    box = slide.shapes.add_textbox(Inches(1), Inches(y), Inches(10), Inches(1))
+                    box.text_frame.text = f"❓ {question_text}"
+                    y += 1.0
+                for item in items.findall("item"):
+                    score = item.attrib.get("score", "0")
+                    label = "✅" if int(score) > 0 else "⬜"
+                    box = slide.shapes.add_textbox(Inches(1.2), Inches(y), Inches(9.5), Inches(0.5))
+                    box.text_frame.text = f"{label} {item.text.strip()}"
+                    y += 0.5
+                feedbacks = page.findall(".//feedbacks/correc/fb/screen/feedback")
+                notes = slide.notes_slide.notes_text_frame
+                feedback_texts = []
+                for fb in feedbacks:
+                    fb_content = fb.find("content")
+                    if fb_content is not None and fb_content.text:
+                        soup = BeautifulSoup(fb_content.text, "html.parser")
+                        feedback_texts.append(soup.get_text(separator="\n"))
+                if feedback_texts:
+                    notes.text += "\n---\n" + "\n---\n".join(feedback_texts)
             # 🖼️ Images dans le screen
             # ✅ Gestion de la profondeur en suivant l'ordre d'apparition dans le XML
             for el in list(screen):
