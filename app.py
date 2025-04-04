@@ -116,7 +116,7 @@ def add_vista_to_notes(screen, slide):
         if items_el is not None:
             bullet_lines = ["🪟 Vue Vista :"]
             for item in items_el.findall("item"):
-                raw = item.text or ""
+                raw = "".join(item.itertext()).strip()
                 soup = BeautifulSoup(raw, "html.parser")
                 # Convert basic formatting
                 for b in soup.find_all("b"):
