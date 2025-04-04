@@ -109,6 +109,88 @@ def from_course(val, axis):
 def from_look(val):
     return float(val) * 0.01043
 
+
+def process_interactive_activity(screen, slide, page, style_map, author_map, course_dir, look_dir):
+    elfe = screen.find("elfe")
+    if elfe is None or elfe.find("content") is None:
+        return
+
+    content = elfe.find("content")
+    elfe_type = content.attrib.get("type", "Inconnu")
+
+    # ➕ Label sur la slide
+    box = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(5), Inches(0.5))
+    tf = box.text_frame
+    tf.word_wrap = True
+    p = tf.paragraphs[0]
+    run = p.add_run()
+    run.text = f"🧩 Activité : {elfe_type}"
+    run.font.bold = True
+    p.alignment = PP_ALIGN.LEFT
+
+    y = 1.0
+    notes = slide.notes_slide.notes_text_frame
+    notes.text += f"\n🧩 Activité de type {elfe_type}\n"
+
+    # ✅ Consigne
+    consigne = screen.find("consigne")
+    if consigne is not None:
+        content_el = consigne.find("content")
+        if content_el is not None and content_el.text:
+            soup = BeautifulSoup(content_el.text, "html.parser")
+            tf = slide.shapes.add_textbox(Inches(0.5), Inches(y), Inches(11), Inches(1)).text_frame
+            tf.text = "📋 Consigne : " + soup.get_text()
+            y += 0.7
+
+    # ✅ Question
+    question = screen.find("question")
+    if question is not None:
+        content_el = question.find("content")
+        if content_el is not None and content_el.text:
+            soup = BeautifulSoup(content_el.text, "html.parser")
+            tf = slide.shapes.add_textbox(Inches(0.5), Inches(y), Inches(11), Inches(1)).text_frame
+            tf.text = "❓ " + soup.get_text()
+            y += 0.8
+
+    # ✅ Réponses
+    items = content.find("items")
+    if items is not None:
+        for item in items.findall("item"):
+            text = item.text.strip() if item.text else ""
+            score = item.attrib.get("score", "0")
+            label = "✅" if int(score) > 0 else "⬜"
+            tf = slide.shapes.add_textbox(Inches(0.7), Inches(y), Inches(10), Inches(0.5)).text_frame
+            tf.text = f"{label} {text}"
+            y += 0.5
+
+    # ✅ Image pour MCQPic (depuis <links>)
+    if elfe_type == "MCQPic":
+        links = elfe.find("links")
+        if links is not None:
+            for link in links.findall("link"):
+                file = link.attrib.get("file")
+                if file:
+                    img_path = os.path.join(course_dir, os.path.basename(file))
+                    if not os.path.exists(img_path):
+                        img_path = os.path.join(look_dir, os.path.basename(file))
+                    if os.path.exists(img_path):
+                        try:
+                            slide.shapes.add_picture(img_path, Inches(1), Inches(y), Inches(5), Inches(3))
+                            y += 3.2
+                        except Exception as e:
+                            notes.text += f"\n⚠️ Erreur image {file} : {e}"
+
+    # ✅ Feedbacks
+    feedbacks = page.findall(".//feedbacks/correc/fb/screen/feedback")
+    feedback_texts = []
+    for fb in feedbacks:
+        fb_content = fb.find("content")
+        if fb_content is not None and fb_content.text:
+            soup = BeautifulSoup(fb_content.text, "html.parser")
+            feedback_texts.append(soup.get_text(separator="\n"))
+    if feedback_texts:
+        notes.text += "\n---\n" + "\n---\n".join(feedback_texts)
+
 def add_vista_to_notes(screen, slide):
     vista_el = screen.find(".//content[@type='Vista']")
     if vista_el is not None:
@@ -400,7 +482,8 @@ if uploaded_file:
             if not screen:
                 continue
             
-            # ✅ Ajout pages vista en commentaire
+                        process_interactive_activity(screen, slide, page, style_map, author_map, os.path.dirname(course_path), os.path.dirname(look_path))
+# ✅ Ajout pages vista en commentaire
             add_vista_to_notes(screen, slide)
             
             # ✅ Ajout des consignes au début du traitement de l'écran
