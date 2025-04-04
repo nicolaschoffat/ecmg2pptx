@@ -152,10 +152,8 @@ def process_interactive_activity(screen, slide, page, style_map, author_map, cou
             tf.text = "❓ " + soup.get_text()
             y += 0.8
 
-    # ✅ Réponses (seulement si activité pas graphique type Cards/Vista/Carousel/etc)
-    if elfe_type not in ["Vista", "Cards", "Carousel", "RejectDrag"]:
+    # ✅ Réponses
     items = content.find("items")
-    if items is not None:
     if items is not None:
         for item in items.findall("item"):
             text = item.text.strip() if item.text else ""
