@@ -427,10 +427,12 @@ if uploaded_file:
 
             page_type = node.find("page").attrib.get("type", "") if node.find("page") is not None else ""
 
+                        page_type = node.find("page").attrib.get("type", "") if node.find("page") is not None else ""
+
             if page_type == "result":
-                # Label "Page Bilan"
-                box = slide.shapes.add_textbox(Inches(9.4), Inches(0.2), Inches(2.4), Inches(0.6))
-                tf = box.text_frame
+                # Label visuel sur la slide
+                label_box = slide.shapes.add_textbox(Inches(9.4), Inches(0.2), Inches(2.4), Inches(0.6))
+                tf = label_box.text_frame
                 tf.word_wrap = True
                 p = tf.paragraphs[0]
                 run = p.add_run()
@@ -441,12 +443,12 @@ if uploaded_file:
                 font.bold = True
                 p.alignment = PP_ALIGN.RIGHT
 
-                # Notes avec les textes pour chaque score
+                # Ajout des commentaires
                 page_el = node.find("page")
                 results_el = page_el.find("results") if page_el is not None else None
                 if results_el is not None:
                     notes = slide.notes_slide.notes_text_frame
-                    notes.text += "\n\n🧾 Résultats affichés selon score :"
+                    result_lines = ["🧾 Résultats affichés selon score :"]
 
                     for result in results_el.findall("result"):
                         score = result.attrib.get("score", "?")
@@ -455,9 +457,11 @@ if uploaded_file:
                         content_el = text_block.find("content") if text_block is not None else None
 
                         raw = "".join(content_el.itertext()) if content_el is not None else ""
-                        text_clean = BeautifulSoup(raw, "html.parser").get_text().strip()
+                        clean_text = BeautifulSoup(raw, "html.parser").get_text().strip()
 
-                        notes.text += f"\n---\n🔢 Score {score} :\n{text_clean}"
+                        result_lines.append(f"\n---\n🔢 Score {score} :\n{clean_text}")
+
+                    notes.text += "\n" + "\n".join(result_lines)
                 else:
                     st.warning(f"Aucune balise <results> trouvée dans node id={node.attrib.get('id')}")
            
