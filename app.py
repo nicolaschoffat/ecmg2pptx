@@ -428,9 +428,9 @@ if uploaded_file:
             page_type = node.find("page").attrib.get("type", "") if node.find("page") is not None else ""
 
             if page_type == "result":
-                # Label visuel sur la slide
-                label_box = slide.shapes.add_textbox(Inches(9.4), Inches(0.2), Inches(2.4), Inches(0.6))
-                tf = label_box.text_frame
+                # 📌 Label "Page Bilan"
+                box = slide.shapes.add_textbox(Inches(9.4), Inches(0.2), Inches(2.4), Inches(0.6))
+                tf = box.text_frame
                 tf.word_wrap = True
                 p = tf.paragraphs[0]
                 run = p.add_run()
@@ -440,28 +440,25 @@ if uploaded_file:
                 font.size = Pt(12)
                 font.bold = True
                 p.alignment = PP_ALIGN.RIGHT
-
-                # Ajout des commentaires
+            
+                # 📋 Notes avec les textes pour chaque score
                 page_el = node.find("page")
                 results_el = page_el.find("results") if page_el is not None else None
+                notes = slide.notes_slide.notes_text_frame
+            
                 if results_el is not None:
-                    notes = slide.notes_slide.notes_text_frame
-                    result_lines = ["🧾 Résultats affichés selon score :"]
-
+                    notes.text += "\n\n🧾 Résultats affichés selon score :"
                     for result in results_el.findall("result"):
                         score = result.attrib.get("score", "?")
                         screen_result = result.find("screen")
                         text_block = screen_result.find("text") if screen_result is not None else None
                         content_el = text_block.find("content") if text_block is not None else None
-
                         raw = "".join(content_el.itertext()) if content_el is not None else ""
-                        clean_text = BeautifulSoup(raw, "html.parser").get_text().strip()
-
-                        result_lines.append(f"\n---\n🔢 Score {score} :\n{clean_text}")
-
-                    notes.text += "\n" + "\n".join(result_lines)
+                        text_clean = BeautifulSoup(raw, "html.parser").get_text().strip()
+                        notes.text += f"\n---\n🔢 Score {score} :\n{text_clean}"
                 else:
                     st.warning(f"Aucune balise <results> trouvée dans node id={node.attrib.get('id')}")
+
            
             # ✅ Ajout de contenu spécifique selon type (Vista, Cards, Carousel)
             add_content_items_to_notes(screen, slide, "Vista", "🪟")
