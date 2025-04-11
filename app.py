@@ -428,9 +428,9 @@ if uploaded_file:
             page_type = node.find("page").attrib.get("type", "") if node.find("page") is not None else ""
 
             if page_type == "result":
-                # 📌 Label "Page Bilan"
-                box = slide.shapes.add_textbox(Inches(9.4), Inches(0.2), Inches(2.4), Inches(0.6))
-                tf = box.text_frame
+                # Label visuel sur la slide
+                label_box = slide.shapes.add_textbox(Inches(9.4), Inches(0.2), Inches(2.4), Inches(0.6))
+                tf = label_box.text_frame
                 tf.word_wrap = True
                 p = tf.paragraphs[0]
                 run = p.add_run()
@@ -441,10 +441,30 @@ if uploaded_file:
                 font.bold = True
                 p.alignment = PP_ALIGN.RIGHT
             
-                # 📋 Notes avec les textes pour chaque score
-                page_el = node.find("page")
-                results_el = page_el.find("results") if page_el is not None else None
-                notes = slide.notes_slide.notes_text_frame
+                # Extraction et ajout des textes dans les commentaires
+                results_el = page.find("results")
+                if results_el is not None:
+                    result_lines = ["🧾 Résultats affichés selon score :"]
+            
+                    for result in results_el.findall("result"):
+                        score = result.attrib.get("score", "?")
+                        screen_result = result.find("screen")
+                        if screen_result is None:
+                            continue
+                        text_block = screen_result.find("text")
+                        if text_block is None:
+                            continue
+                        content_el = text_block.find("content")
+                        if content_el is None:
+                            continue
+            
+                        raw = "".join(content_el.itertext())
+                        clean_text = BeautifulSoup(raw, "html.parser").get_text().strip()
+                        result_lines.append(f"\n---\n🔢 Score {score} :\n{clean_text}")
+            
+                    # Écriture finale dans les notes
+                    notes = slide.notes_slide.notes_text_frame
+                    notes.text += "\n" + "\n".join(result_lines)
             
                 if results_el is not None:
                     notes.text += "\n\n🧾 Résultats affichés selon score :"
