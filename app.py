@@ -427,8 +427,6 @@ if uploaded_file:
 
             page_type = node.find("page").attrib.get("type", "") if node.find("page") is not None else ""
 
-                        page_type = node.find("page").attrib.get("type", "") if node.find("page") is not None else ""
-
             if page_type == "result":
                 # Label visuel sur la slide
                 label_box = slide.shapes.add_textbox(Inches(9.4), Inches(0.2), Inches(2.4), Inches(0.6))
