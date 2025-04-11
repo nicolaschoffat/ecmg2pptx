@@ -421,9 +421,15 @@ if uploaded_file:
                 p.alignment = PP_ALIGN.LEFT
 
             page = node.find(".//page")
+            page_type = page.attrib.get("type", "") if page is not None else ""
             screen = page.find("screen") if page is not None else None
-            if not screen:
+            
+            # ⚠️ Ne pas "continue" pour les pages de type "result"
+            if screen is None and page_type != "result":
                 continue
+                
+            if page_type == "result":
+                st.write(f"✅ Slide Résultat détectée : id={node.attrib.get('id')}")
 
             page_type = node.find("page").attrib.get("type", "") if node.find("page") is not None else ""
 
