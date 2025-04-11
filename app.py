@@ -465,17 +465,7 @@ if uploaded_file:
                     # Écriture finale dans les notes
                     notes = slide.notes_slide.notes_text_frame
                     notes.text += "\n" + "\n".join(result_lines)
-            
-                if results_el is not None:
-                    notes.text += "\n\n🧾 Résultats affichés selon score :"
-                    for result in results_el.findall("result"):
-                        score = result.attrib.get("score", "?")
-                        screen_result = result.find("screen")
-                        text_block = screen_result.find("text") if screen_result is not None else None
-                        content_el = text_block.find("content") if text_block is not None else None
-                        raw = "".join(content_el.itertext()) if content_el is not None else ""
-                        text_clean = BeautifulSoup(raw, "html.parser").get_text().strip()
-                        notes.text += f"\n---\n🔢 Score {score} :\n{text_clean}"
+
                 else:
                     st.warning(f"Aucune balise <results> trouvée dans node id={node.attrib.get('id')}")
 
