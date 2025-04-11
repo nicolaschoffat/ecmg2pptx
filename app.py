@@ -462,10 +462,13 @@ if uploaded_file:
                         clean_text = BeautifulSoup(raw, "html.parser").get_text().strip()
                         result_lines.append(f"\n---\n🔢 Score {score} :\n{clean_text}")
             
-                    # Écriture finale dans les notes
+                    # 💡 S'assurer que les notes existent
+                    if not slide.has_notes_slide:
+                        slide.notes_slide  # crée la slide de notes si absente
+            
                     notes = slide.notes_slide.notes_text_frame
                     notes.text += "\n" + "\n".join(result_lines)
-
+            
                 else:
                     st.warning(f"Aucune balise <results> trouvée dans node id={node.attrib.get('id')}")
 
